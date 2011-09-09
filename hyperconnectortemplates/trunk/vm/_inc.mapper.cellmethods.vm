@@ -1,0 +1,130 @@
+##==================[CREATE + PROCESS CELL METHODS]==================
+#set ( $m_serTypes = {} )
+#foreach($cf in $m_cellSpecProperties.keySet())
+	#set ( $m_cqfp = $m_cellSpecProperties.get($cf) ) 
+	#foreach($cqfp in $m_cqfp.keySet())
+		#set ( $m_props = {})
+		#getCellSpecPropertyMap($m_props $cf $cqfp)
+		
+		#set ( $l_orderedValueFieldListCQ = [] )
+		#set ( $l_orderedValueFieldListValue = [] )
+		#set ( $l_orderedValueFieldListCQ = $m_props.get($CSP_ORDEREDCQATTRIBUTES) )
+		#set ( $l_orderedValueFieldListValue = $m_props.get($CSP_ORDEREDVALUEATTRIBUTES) )
+        #set ( $cellSpec = $m_props.get($CSP_CELLSPEC) )
+		#set ( $hasValueField = $m_props.get($CSP_HASVALUEFIELD) )
+		#set ( $hasCqField = $m_props.get($CSP_HASCQFIELD) )
+		#set ( $valueSerializer = $m_props.get($CSP_VALUESERIALIZER) )
+		#set ( $cqSerializer = $m_props.get($CSP_CQSERIALIZER) )
+		#set ( $cqSerJavaType = $m_props.get($CSP_CQSERJAVATYPE) )
+		#set ( $cqSerJavaVarName = $m_props.get($CSP_CQSERJAVAVARNAME) )
+		#set ( $valueSerJavaType = $m_props.get($CSP_VALUESERJAVATYPE) )
+		#set ( $valueSerJavaVarName = $m_props.get($CSP_VALUESERJAVAVARNAME) )
+		#set ( $commonSerializer = (($hasCqField == $TRUE) && ($hasValueField == $TRUE) && ($cqSerJavaVarName == $valueSerJavaVarName)) )
+		#set ( $commonSerJavaType = "" )
+		#set ( $commonSerJavaVarName = "" )
+		#if ($commonSerializer == $TRUE)
+    		#set ( $commonSerJavaType = $cqSerJavaType )
+    		#set ( $commonSerJavaVarName = $cqSerJavaVarName )
+		#end
+
+        ##collect invidual serialization types
+        #if($hyperEntityRowKeySerializationType != $ST_FIELDPROCESSOR)
+            #mute ( $m_serTypes.put($hyperEntityRowKeySerializationType, "") )
+        #end
+        #set ( $necessarySerializers = {} )
+        #if ( $hasCqField == $TRUE)
+            #mute ( $necessarySerializers.put($cqSerializer, "") )
+            #mute ( $m_serTypes.put($cqSerializer, "") )
+        #end
+        #if ( $hasValueField == $TRUE )
+            #mute ( $necessarySerializers.put($valueSerializer, "") ) 
+            #mute ( $m_serTypes.put($valueSerializer, "") )
+        #end
+	
+## createCell_(...)
+			private Cell createCell_${cellSpec}(${classname} hyperEntity, #if ($commonSerializer == $TRUE)$commonSerJavaType $commonSerJavaVarName, #else#if($hasCqField == $TRUE)$cqSerJavaType $cqSerJavaVarName, #end#if($hasValueField == $TRUE)$valueSerJavaType $valueSerJavaVarName, #end#end String rowKey#if($assignTimestampToCells == $TRUE), long timestamp#end) throws HyperSerializationException {
+        ##CREATE CELL - CQ PART
+        #foreach ($cqField in $l_orderedValueFieldListCQ)
+            #if ($cqSerializer != $ST_FIELDPROCESSOR)
+                ${cqSerJavaVarName}.write${cqField.type}(hyperEntity.get${cqField.getNameU1()}());
+            #else
+				${cqSerJavaVarName}.set${cqField.getNameU1()}(hyperEntity.get${cqField.getNameU1()}());
+				/* FIELD PROCESSOR NOT SUPPORTED YET FOR COLUMN QUALIFIER FIELDS */ 
+            #end##if-else
+        #end##foreach - l_orderedValueFieldListCQ
+        
+                 String columnQualifier = columnQualifierFixedPart_${cellSpec}#if( $hasCqField == $TRUE ) + HyperConstants.columnQualifierFixedPartSeparator + ${cqSerJavaVarName}.getValueAsNonNullCharString()#end;
+
+		##RESET SERIALIZER IF THEY ARE THE SAME
+        #if ($commonSerializer == $TRUE)
+				// same serializer used for column qualifier and value fields, reset it
+                ${commonSerJavaVarName}.reset();
+        #end
+        	
+        ##CREATE CELL - VALUE PART
+                 byte[] value = new byte[0];
+        #foreach ($valueField in $l_orderedValueFieldListValue)
+            #if ($valueSerializer != $ST_FIELDPROCESSOR)
+                ${valueSerJavaVarName}.write${valueField.type}(hyperEntity.get${valueField.getNameU1()}());
+            #else
+				${valueSerJavaVarName}.set${valueField.getNameU1()}(hyperEntity.get${valueField.getNameU1()}());
+				/* FIELD PROCESSOR NOT SUPPORTED YET FOR VALUE FIELDS */ 
+            #end##if-else
+        #end##foreach - l_orderedValueFieldListValue
+        #if ($hasValueField == $TRUE)
+				value = ${valueSerJavaVarName}.getValue();
+        #end
+
+				return getCell(rowKey#if($assignTimestampToCells == $TRUE), timestamp#end, columnFamily_${cf}, columnQualifier, value);
+            }
+        	
+        	
+        	
+## processCell_(...)
+            private void processCell_${cellSpec}(Cell cell, ${classname} hyperEntity, #if ($commonSerializer == $TRUE)$commonSerJavaType $commonSerJavaVarName, #else#if($hasCqField == $TRUE)$cqSerJavaType $cqSerJavaVarName, #end#if($hasValueField == $TRUE)$valueSerJavaType $valueSerJavaVarName, #end#end String columnQualifierFields) throws HyperSerializationException {
+        ##PROCESS CELL - CQ PART
+		#if ($hasCqField == $TRUE)
+            #if ($cqSerializer != $ST_FIELDPROCESSOR)
+                 ${cqSerJavaVarName}.setValueAsNonNullCharString(columnQualifierFields);
+            #else
+                 ${cqSerJavaVarName}.setValueAsNonNullCharString(columnQualifierFields);
+				/* FIELD PROCESSOR NOT SUPPORTED YET FOR COLUMN QUALIFIER FIELDS */ 
+            #end##if-else
+            #foreach ($cqField in $l_orderedValueFieldListCQ)
+                #if ($cqSerializer != $ST_FIELDPROCESSOR)
+                hyperEntity.set${cqField.getNameU1()}(${cqSerJavaVarName}.read${cqField.type}());
+                #else
+                hyperEntity.set${cqField.getNameU1()}(${cqSerJavaVarName}.read${cqField.type}());
+				/* FIELD PROCESSOR NOT SUPPORTED YET FOR COLUMN QUALIFIER FIELDS */ 
+                #end##if-else
+            #end##foreach - l_orderedValueFieldListCQ
+        
+            ##RESET SERIALIZER IF THEY ARE THE SAME
+            #if ($commonSerializer == $TRUE)
+				// same serializer used for column qualifier and value fields, reset it
+                ${commonSerJavaVarName}.reset();
+			#end
+		#end ## if (hasCqField)
+        
+		#if ($hasValueField == $TRUE)
+            ##PROCESS CELL - VALUE PART
+            #if ($valueSerializer != $ST_FIELDPROCESSOR)
+                 ${valueSerJavaVarName}.setValue(cell.getValue());
+            #else
+                 ${valueSerJavaVarName}.setValue(cell.getValue());
+				/* FIELD PROCESSOR NOT SUPPORTED YET FOR VALUE FIELDS */ 
+            #end##if-else
+            #foreach($valueField in $l_orderedValueFieldListValue)
+                #if ($valueSerializer != $ST_FIELDPROCESSOR)
+                hyperEntity.set${valueField.getNameU1()}(${valueSerJavaVarName}.read${valueField.type}());
+                #else
+                hyperEntity.set${valueField.getNameU1()}(${valueSerJavaVarName}.read${valueField.type}());
+				/* FIELD PROCESSOR NOT SUPPORTED YET FOR VALUE FIELDS */ 
+                #end##if-else-else-else
+            #end##foreach - l_orderedValueFieldListValue
+            }
+		#end ## if (hasValueField)
+    #end##foreach - cqfp keyset
+#end##foreach - cf keyset
+	
+##==================[CREATE CELL METHODS END]==================

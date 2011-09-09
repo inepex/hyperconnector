@@ -1,0 +1,32 @@
+##==================[CREATE ROW KEY]==================
+    private String createRowKey(${classname} hyperEntity, $rowKeySerJavaType $rowKeySerJavaVarName) throws HyperSerializationException {
+#if($hyperEntityRowKeySerializationType == $ST_BINARY || $hyperEntityRowKeySerializationType == $ST_PLAIN)
+    #foreach($rowKey in $l_orderedRowKey)
+        ${rowKeySerJavaVarName}.write${rowKey.type}(hyperEntity.get${rowKey.getNameU1()}());
+    #end##foreach - l_orderedRowKey
+#elseif($hyperEntityRowKeySerializationType == $ST_FIELDPROCESSOR)
+    #foreach($rowKey in $l_orderedRowKey)
+        ${rowKeySerJavaVarName}.set${rowKey.getNameU1()}(hyperEntity.get${rowKey.getNameU1()}());
+    #end##foreach - l_orderedRowKey
+#end##if-elseif - ST_XXXXXX
+
+		return ${rowKeySerJavaVarName}.getValueAsNonNullCharString();
+    }
+##==================[CREATE ROW KEY END]==================
+
+##==================[PROCESS ROW KEY]==================
+	private void processRowKey(${classname} hyperEntity, $rowKeySerJavaType $rowKeySerJavaVarName, String rowKey) throws HyperSerializationException {
+		${rowKeySerJavaVarName}.setValueAsNonNullCharString(rowKey);
+
+#if($hyperEntityRowKeySerializationType == $ST_BINARY || $hyperEntityRowKeySerializationType == $ST_PLAIN)
+    #foreach($rowKey in $l_orderedRowKey)
+        hyperEntity.set${rowKey.getNameU1()}(${rowKeySerJavaVarName}.read${rowKey.type}());
+    #end##foreach - l_orderedRowKey
+#elseif($hyperEntityRowKeySerializationType == $ST_FIELDPROCESSOR)
+    #foreach($rowKey in $l_orderedRowKey)
+        hyperEntity.set${rowKey.getNameU1()}(${rowKeySerJavaVarName}.get${rowKey.getNameU1()}());
+    #end##foreach - l_orderedRowKey
+#end##if-elseif - ST_XXXXXX
+	}
+##==================[PROCESS ROW KEY END]==================
+

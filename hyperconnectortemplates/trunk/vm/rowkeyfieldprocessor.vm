@@ -1,0 +1,79 @@
+outpath:${class.workspaceRelativePath}serialization/${classname}RowKeyFieldProcessor.java
+#parse('_inc.entityparser.vm')
+package ${package}.serialization;
+
+import ${package}.${classname};
+
+public class ${classname}RowKeyFieldProcessor implements FieldProcessor {
+	/*hc:customCode*/
+	
+	/*hc*/
+	
+#foreach($rowKey in $l_orderedRowKey)
+	private ${rowKey.type} ${rowKey.name};
+#end
+
+	public ${classname}RowKeyFieldProcessor(){
+	
+	}
+
+	@Override
+	public byte[] getValue() {
+		/*hc:getValue*/
+		return null;
+		/*hc*/
+	}
+
+	@Override
+	public void setValue(byte[] value) {
+		/*hc:setValue*/
+		
+		/*hc*/
+	}
+
+	@Override
+	public String getValueAsString() {
+		return SerializationUtil.byteArrayToString(getValue());
+	}
+
+	@Override
+	public void setValueAsString(String strValue) {
+		setValue(SerializationUtil.stringToByteArray(strValue));
+	}
+
+	@Override
+	public String getValueAsNonNullCharString() {
+		// value won't contain null chars anyway
+		return getValueAsString();
+	}
+
+	@Override
+	public void setValueAsNonNullCharString(String strValue) {
+		// value won't contain null chars anyway
+		setValueAsString(strValue);
+	}
+	
+#foreach($rowKey in $l_orderedRowKey)
+#set ( $firstLetter = $rowKey.name.substring(0, 1) )
+#set ( $remainLetter = $rowKey.name.substring( 1, $rowKey.name.length()) )
+#set ( $firstLetter = $firstLetter.toUpperCase() )
+#set ( $attributeNameInGet = "${firstLetter}${remainLetter}" )
+##GET
+	public $rowKey.type get${attributeNameInGet}(){
+		return $rowKey.name;
+	}
+
+##SET
+	public void set${attributeNameInGet}($rowKey.type $rowKey.name){
+		this.${rowKey.name} = ${rowKey.name};
+	}
+	
+#end
+	
+	@Override
+	public void reset() {
+		/*hc:reset*/
+		
+		/*hc*/
+	}
+}

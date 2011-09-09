@@ -1,0 +1,121 @@
+#parse('_inc.entityparser.vm')
+
+##display hyperEntity annotation's attributes
+Entity's namespace: ${hyperEntityNamespace}
+Entity's tablename: ${hyperEntityNamespace}
+Entity's group commit interval: $hyperEntityGroupCommitIntervalMillis
+Entity's cell serialization descriptors - LIST: 
+#if($cellSerializationDescriptors)
+    #foreach($cellSerializationDescriptor in $cellSerializationDescriptors)
+    	${foreach.count}: 
+    	Column family: $cellSerializationDescriptor.getParamValue("columnFamily")
+    	Qualifier fixed part: $cellSerializationDescriptor.getParamValue("columnQualifierFixedPart")
+    	Qualifier serialization type: $cellSerializationDescriptor.getParamValue("columnQualifierSerializationType")
+    	Value serialization type: $cellSerializationDescriptor.getParamValue("valueSerializationType")
+	#end
+#else
+	Cell serialization descriptor is NULL
+#end
+Entity's rowkey serialization type: $hyperEntityRowKeySerializationType
+Entity's global column qualifier serialization type: $hyperEntityGlobalColumnQualifierSerializationType
+Entity's global value serialization type: $hyperEntityGlobalValueSerializationType
+Entity's access groups - LIST:
+#foreach($accessGroup in $hyperEntityAccessGroups)
+	$accessGroup.getParamValue("name")
+	#foreach($cols in $accessGroup.getParamStringList("columnFamilies"))
+		${foreach.count}: $cols 
+	#end
+#end
+
+
+
+====[ORDER - ROWKEY LIST  MAP]====
+##set ( $issue = "" )
+##set ( $rSorter = $issue.class.forName("org.apache.velocity.tools.generic.SortTool").newInstance() )
+##set ( $orderedList = [] )
+#foreach( $key in $m_order_rowKeyList.keySet() )
+		#set ( $currentList = $m_order_rowKeyList.get($key) )
+		
+		Order value: $key
+		#foreach($item in $currentList)
+			The attribute's name: $item.getName()
+			#set( $void_print_true = $orderedList.add($item))
+		#end
+#end
+
+
+
+====[TIMESTAMP]====
+Timestamp's assignment type: $timestampAssignmentType
+Timestamp's fixed timestamp's value: $attr_timestampFixedTimestamp
+
+
+
+====[VALUE FIELD - ANNOTATION ATTRIBUTES LIST  MAP]====
+#foreach( $key in $m_valueField_annotationAttributeList.keySet() )
+		#set ( $currentList = $m_valueField_annotationAttributeList.get($key) )
+		
+		Attribute: $key.getName()
+		#foreach($item in $currentList)
+			${foreach.count}: $item
+		#end
+#end
+
+
+
+====[VALUE FIELD ORDER MAP]====
+#foreach( $key in $m_order_valueFieldList.keySet() )
+		#set ( $currentList = $m_order_valueFieldList.get($key) )
+		
+		Attribute: $key
+		#foreach($item in $currentList)
+			$item.getName()
+		#end
+#end
+
+
+
+====[COLUMN FAMILIES]====
+#foreach( $key in $m_cellSpecProperties.keySet() )
+	${foreach.count}: $key
+#end
+
+
+
+====[HAS COLLECTION]====
+hasCollection = $hasCollection
+
+
+
+====[IS SINGLE CELL]====
+isSingleCell = $isSingleCell
+
+
+
+====[SEARCH METHODS]====
+#foreach ( $key in $l_RKBSearchMethods )
+	${key.getParamValue($NAME_BASE)}:
+		NameBase: $m_RKBSearchMethod_nameBase.get($key)
+		Delete: $m_RKBSearchMethod_delete.get($key)
+		Select: $m_RKBSearchMethod_select.get($key)
+		LastSearchFieldName: $m_RKBSearchMethod_lastSearchFieldName.get($key)
+		LastSearchFieldParamType: $m_RKBSearchMethod_lastSearchFieldParamType.get($key)
+		SpecifyTimestamp: $m_RKBSearchMethod_specifyTimestamp.get($key)
+		RowLimitType: $m_RKBSearchMethod_rowLimitType.get($key)
+		FixedRowLimit: $m_RKBSearchMethod_fixedRowLimit.get($key)
+		ResultType: $m_RKBSearchMethod_resultType.get($key)
+		AllowRegExp: $m_RKBSearchMethod_allowRegExp.get($key)
+#end
+
+
+====[VALUE MAP]====
+#foreach( $valueMap in $l_valueMapAttributes )
+	${foreach.count}: $valueMap.name - $valueMap.type
+#end
+
+
+
+====[VALUE LIST]====
+#foreach( $valueList in $l_valueListAttributes )
+	${foreach.count}: $valueList.name - $valueList.type 
+#end

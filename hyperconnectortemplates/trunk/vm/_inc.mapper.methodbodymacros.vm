@@ -1,0 +1,228 @@
+#macro(processRawCellVarDeclarations)
+		// timestamp and rowKey values must be the same for all cells
+		long timestamp = 0;
+		String rowKey = "";
+		// variables for iterating through cells
+		String columnFamily = "";
+		String columnQualifier = "";
+		String columnQualifierFixedPart = "";
+		String columnQualifierFields = "";
+		
+		// null check for key
+		Key key = cell.getKey();
+		if (key == null)
+			throw new HyperMappingException(invalidCell_Key);
+
+		// cell consistency check:
+		// - read rowKey and timestamp
+		// - ensure that row key and column family are not null or empty
+		timestamp = key.getTimestamp();
+		rowKey = key.getRow();
+		if (rowKey == null || rowKey.isEmpty())
+			throw new HyperMappingException(invalidCell_RowKeyNullOrEmpty);
+		columnFamily = key.getColumn_family();
+		if (columnFamily == null || columnFamily.isEmpty())
+			throw new HyperMappingException(invalidCell_ColumnFamilyNullOrEmpty);
+
+		// current cell is consistent, process fields
+
+		// read column qualifier
+		// - columnQualifierFixedPart: either the entire column qualifier (no HyperEntity values stored in the column qualifier)
+		//   or the fixed part of the column qualifier that precedes the HyperEntity values stored in the column qualifier
+		//   (and the column qualifier fixed part separator)
+		// - columnQualifierFields: either empty or contains the HyperEntity values in the column qualifier after
+		//   columnQualifierFixedPart (and the column qualifier fixed part separator)
+		// columnFamily and columnQualifierFixedPart specify what cell is being processed (what HyperEntity fields are stored in it)
+
+		columnQualifier = key.getColumn_qualifier();
+		if (columnQualifier == null)
+			columnQualifier = "";
+		String[] columnQualifierParts = columnQualifier.split(HyperConstants.columnQualifierFixedPartSeparator, 2);
+		
+		columnQualifierFixedPart = columnQualifierParts[0];
+		if (columnQualifierParts.length > 1)
+			columnQualifierFields = columnQualifierParts[1];
+		else
+			columnQualifierFields = "";
+		if (columnQualifierFields == null)
+			columnQualifierFields = "";
+		// at this point columnQualifierFields is surely not null
+
+#end ## macro
+
+#macro(declareCellProcessedFlags)
+	#foreach($cf in $m_cellSpecProperties.keySet())
+		#if ($cf)
+            #set( $m_cqfp = $m_cellSpecProperties.get($cf) )
+			#if ($m_cqfp)
+                #foreach($cqfp in $m_cqfp.keySet())
+					#set($m_props = $m_cqfp.get($cqfp))
+            		#if ($m_props)
+        				#set($cellSpec = $m_props.get($CSP_CELLSPEC))
+						boolean cellProcessed_$cellSpec = false;
+            		#end ## if
+                #end ## foreach
+			#end ## if ($m_cqfp)
+		#end ## if ($cf)
+	#end ## foreach
+#end ## macro
+
+#macro(checkCellProcessedFlags)
+	#if ($hasNonCollection == $TRUE)
+		boolean allCellsProcessed = 
+		#set($firstCf = $TRUE)
+    	#foreach($cf in $m_cellSpecProperties.keySet())
+    		#if ($cf)
+                #set( $m_cqfp = $m_cellSpecProperties.get($cf) )
+    			#if ($m_cqfp)
+                    #foreach($cqfp in $m_cqfp.keySet())
+    					#set($m_props = $m_cqfp.get($cqfp))
+                		#if ($m_props)
+    						#if ($firstCf == $FALSE)
+						&&
+    						#end
+            				#set($cellSpec = $m_props.get($CSP_CELLSPEC))
+						cellProcessed_$cellSpec
+                		#end ## if
+                    #end ## foreach
+    			#end ## if ($m_cqfp)
+				#set($firstCf = $FALSE)
+    		#end ## if ($cf)
+    	#end ## foreach
+			;
+		// check if required cell has been processed, throw if not
+		if (!allCellsProcessed)
+			throw new HyperMappingException(mappingFailed_MissingCell);
+	#end ## if (hasNonCollection)
+#end ## macro
+
+#macro( processRawCellBody )
+	#set($firstCf = $TRUE)
+	#foreach($cf in $m_cellSpecProperties.keySet())
+		#if ($cf)
+    		#if ($firstCf == $FALSE)else#end
+		if (columnFamily.equals(columnFamily_$cf)) {
+            #set( $m_cqfp = $m_cellSpecProperties.get($cf) )
+			#if ($m_cqfp)
+				#set($cellSpec = $m_cqfp.get($CSP_CELLSPEC))
+				#set($firstCqfp = $TRUE)
+                #foreach($cqfp in $m_cqfp.keySet())
+					#set($m_props = $m_cqfp.get($cqfp))
+					#if ($firstCqfp == $FALSE)else#end
+			if (columnQualifierFixedPart.equals(columnQualifierFixedPart_$cellSpec)) {
+            		#if ($m_props)
+                    	#set($l_SerParamList = [])
+                    	#getCellSpecSerParamList($l_SerParamList, $m_props, $FALSE)
+                    	#set($serParamList = $l_SerParamList.get(0))
+    						processCell_$cellSpec(cell, hyperEntity, $serParamList, columnQualifierFields);
+    						cellProcessed_$cellSpec = true;
+            		#end ## if
+			}
+                #end ## foreach
+			else
+				throw new HyperMappingException(invalidCell_InvalidColQ);
+			#end ## if ($m_cqfp)
+		}
+			#set($firstCf = $FALSE)
+		#end ## if ($cf)
+	#end ## foreach
+	#if ($hasCollection == $TRUE)
+		#if ($hasNonCollection == $TRUE)else#end
+		if (columnFamily.equals(HyperConstants.collectionColumnFamily)) {
+		#if($hasMap == $TRUE)
+			if (columnQualifierFixedPart.equals(HyperConstants.columnQualifierFixedPart_Map)) {
+				processCell_MapField(cell, hyperEntity, $ST_VARNAME_BINARY, columnQualifierFields);
+				${ST_VARNAME_BINARY}.reset();
+			}
+			#if ($hasList == $TRUE)
+				else
+			#end
+        #end ## if (hasMap)
+		#if($hasList == $TRUE)
+			if (columnQualifierFixedPart.equals(HyperConstants.columnQualifierFixedPart_List)) {
+				processCell_ListField(cell, hyperEntity, $ST_VARNAME_BINARY, columnQualifierFields);
+				${ST_VARNAME_BINARY}.reset();
+			}
+        #end ## if (hasList)
+			else
+				throw new HyperMappingException(invalidCell_InvalidColQ);
+		}
+	#end ## if (hasCollection)
+		else
+			throw new HyperMappingException(invalidCell_InvalidColF);
+#end ## macro
+
+#macro(processRawCellListBodyStart)
+		long timestamp = 0;
+		String rowKey = "";
+		// variables for iterating through cells
+		String columnFamily = "";
+		String columnQualifier = "";
+		String columnQualifierFixedPart = "";
+		String columnQualifierFields = "";
+		
+		// CODEGEN INFO: place for required cell spec flags
+		// no expected cells, no flags for them
+#declareCellProcessedFlags()
+		
+		boolean firstCellProcessed = false;
+		for (Cell cell : cells) {
+			// null checks
+			if (cell == null)
+				throw new HyperMappingException(invalidCell);
+			Key key = cell.getKey();
+			if (key == null)
+				throw new HyperMappingException(invalidCell_Key);
+
+			// cell consistency check:
+			// - read (first cell) or check (later cells) rowKey and timestamp
+			// - ensure that column family is not null or empty
+			if (firstCellProcessed) {
+				// key.timestamp() must be the same for all cells
+				// key.getRow() must contain the current rowKey for first cell, must be empty or contain the same rowKey for the rest of the cells
+				String currentCellRowKey = key.getRow();
+				if (key.getTimestamp() != timestamp || (currentCellRowKey != null && !currentCellRowKey.isEmpty() && !rowKey.equals(currentCellRowKey)))
+					throw new HyperMappingException(invalidCell_InconsistentRowKeyOrTimestamp);
+			}
+			else {
+				timestamp = key.getTimestamp();
+				rowKey = key.getRow();
+				if (rowKey == null || rowKey.isEmpty())
+					throw new HyperMappingException(invalidCell_RowKeyNullOrEmpty);
+				firstCellProcessed = true;
+			}
+			columnFamily = key.getColumn_family();
+			if (columnFamily == null || columnFamily.isEmpty())
+				throw new HyperMappingException(invalidCell_ColumnFamilyNullOrEmpty);
+
+			// current cell is consistent, process fields
+
+			// read column qualifier
+			// - columnQualifierPrefix: either the entire column qualifier (no HyperEntity values stored in the column qualifier)
+			//   or the fixed part of the column qualifier that precedes the HyperEntity values stored in the column qualifier
+			//   (and the column qualifier prefix separator)
+			// - columnQualifierFields: either empty or contains the HyperEntity values in the column qualifier after
+			//   columnQualifierPrefix (and the column qualifier prefix separator)
+			// columnFamily and columnQualifierPrefix specify what cell is being processed (what HyperEntity fields are stored in it)
+
+			columnQualifier = key.getColumn_qualifier();
+			if (columnQualifier == null)
+				columnQualifier = "";
+			String[] columnQualifierParts = columnQualifier.split(HyperConstants.columnQualifierFixedPartSeparator, 2);
+			
+			columnQualifierFixedPart = columnQualifierParts[0];
+			if (columnQualifierFixedPart == null)
+				columnQualifierFixedPart = "";
+
+			if (columnQualifierParts.length > 1) {
+				columnQualifierFields = columnQualifierParts[1];
+				if (columnQualifierFields == null)
+					columnQualifierFields = "";
+			}
+			else
+				columnQualifierFields = "";
+#end ## macro
+
+#macro(processRawCellListBodyEnd)
+		}
+#end ## macro

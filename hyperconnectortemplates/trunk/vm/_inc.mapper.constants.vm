@@ -1,0 +1,40 @@
+##==================[FIXED TIMESTAMP]==================
+#if ($timestampAssignmentType == $TAT_FIXED)
+    protected static final long fixedTimestamp = $fixedTimestamp;
+#end ## if
+##==================[FIXED TIMESTAMP END]==================
+##==================[COLUMN FAMILIES]==================
+    // static final fields for column family values
+#foreach($columnFamily in $m_cellSpecProperties.keySet())
+    private static final String columnFamily_${columnFamily} = "${columnFamily}";
+#end
+##==================[COLUMN FAMILIES END]==================
+
+##==================[COLUMN QUALIFIER FIXED PARTS]==================
+#foreach($cf in $m_cellSpecProperties.keySet())
+    #set( $m_cqfp = $m_cellSpecProperties.get($cf) )
+    #foreach($cqfp in $m_cqfp.keySet())
+		#set ( $cellSpec = ${cf} + "_" + ${cqfp} )
+        protected static final String columnQualifierFixedPart_${cellSpec} = "${cqfp}";
+    #end##foreach - m_cqfp
+#end##foreach - m_cellSpecProperties
+##==================[COLUMN QUALIFIER FIXED PARTS END]==================
+
+##==================[COLLECTION FIELDS]==================
+#foreach($listField in $l_valueListAttributes)
+    protected static final String listFieldName_${listField.name} = "${listField.name}";
+#end
+
+#foreach($mapField in $l_valueMapAttributes)
+    protected static final String mapFieldName_${mapField.name} = "${mapField.name}";
+#end
+##==================[COLLECTION FIELDS END]==================
+
+##==================[IS SINGLE CELL]==================
+	protected static final boolean isSingleCell = ${isSingleCell};
+	@Override
+	public boolean getIsSingleCell() {
+		return isSingleCell;
+	}
+##==================[IS SINGLE CELL END]==================
+

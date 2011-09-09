@@ -1,0 +1,15 @@
+outpath:${class.workspaceRelativePath}hql/${classname}.hql
+#parse('_inc.entityparser.vm')
+USE "/";
+CREATE NAMESPACE ${hyperEntityNamespace};
+USE ${hyperEntityNamespace};
+CREATE TABLE ${hyperEntityTable}(#if($hasCollection)${COLLECTION_COLUMN_FAMILY}#if($m_cellSpecProperties.keySet().size() > 0),
+#end
+#end
+#foreach($key in $sortTool.sort( $m_cellSpecProperties.keySet() ))
+$key#if( $foreach.hasNext || $hyperEntityAccessGroups.size() > 0),
+#end
+#end
+#foreach($accessGroup in $hyperEntityAccessGroups)
+ACCESS GROUP $accessGroup.getParamValue("name") (#foreach($cols in $accessGroup.getParamStringList("columnFamilies"))$cols#if( $foreach.hasNext ), #end#end)#if( $foreach.hasNext ),
+#end#end);
