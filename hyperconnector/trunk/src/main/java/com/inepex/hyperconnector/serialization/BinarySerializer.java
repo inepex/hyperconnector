@@ -6,6 +6,11 @@ import org.apache.thrift.transport.TMemoryBuffer;
 
 import com.inepex.hyperconnector.serialization.util.SerializationUtil;
 
+/**
+ * Binary serializer based on Thrift 0.6.0. serialization methods and classes, slightly modified to suit HyperConnector's needs.
+ * @author Gabor Dicso
+ *
+ */
 public class BinarySerializer implements HyperSerializer {
 
 	private static final String serFailedMsg = "BinarySerializer: serialization failed.";
