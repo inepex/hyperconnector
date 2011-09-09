@@ -1,3 +1,5 @@
+<p align="justify">
 Hypertable is a no-sql database system. This project aims to bring a JPA like technology to Hypertable.
 It’s functionality in a nutshell is to create hypertable entities in java (with the Hyperconnector’s annotations), then with some clicks generate the necessary classes, that are handle the entities.
 After these simple steps you can use your entities in a regular way.
+</p>
