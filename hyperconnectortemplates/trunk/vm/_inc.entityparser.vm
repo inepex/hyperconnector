@@ -1,0 +1,504 @@
+## variables:
+## m_CellSpecProperties: contains properties for each cellspec
+## - Map<columnFamily, Map<columnQualifierFixedPart, Map<propertyKey, propertyValue>>>
+##   property keys:
+##   - CSP_HASVALUEFIELD - boolean
+##   - CSP_HASCQFIELD - boolean
+##   - CSP_CELLSPEC - String
+##   - CSP_CQSERIALIZER - column qualifier serialization type
+##   - CSP_VALUESERIALIZER - value serialization type
+##   - CSP_ORDEREDCQATTRIBUTES - map<order, attribute>
+##   - CSP_ORDEREDVALUEATTRIBUTES - map<order, attribute>
+## 
+## hyperEntityRowKeySerializationType
+## timestampAssignmentType
+## fixedTimestamp
+## hasTimestampField
+## timestampFieldName
+## timestampFieldNameU1
+## 
+## hasCollection
+## hasList
+## hasMap
+## hasNonCollection
+## isSingleCell
+## 
+## l_orderedRowKey - row key fields ordered by their order values and names
+## l_valueListAttributes
+## l_valueMapAttributes
+## 
+## 
+## 
+## 
+## 
+## 
+## 
+## 
+## 
+
+#parse('_inc.constants.vm')
+#parse('_inc.commonmacros.vm')
+
+
+
+#macro( putCellSpecProperty, $cf, $cqfp, $key, $value )
+	##get the specific property map
+	#set ( $m_cqfp = {} )
+	#if ( $m_cellSpecProperties.keySet().contains($cf) )
+		#set ( $m_cqfp = $m_cellSpecProperties.get($cf) )
+	#end
+	
+	#set ( $m_props = {} )
+	#if ( $m_cqfp.keySet().contains($cqfp) )
+		#set ( $m_props = $m_cqfp.get($cqfp) )
+	#end
+	
+	##put the key-value into the property map
+	#putToMap($m_props, $key, $value)
+
+	##put the maps back into the original
+	#putToMap($m_cqfp, $cqfp, $m_props)
+	#putToMap($m_cellSpecProperties, $cf, $m_cqfp)
+#end
+
+#macro ( getCellSpecPropertyMap, $ret_m_properties, $cf, $cqfp )
+	#if ( $m_cellSpecProperties.keySet().contains($cf) )
+		#set ( $m_cqfp = $m_cellSpecProperties.get($cf) )
+		#if ( $m_cqfp.keySet().contains($cqfp) )
+			#putAllToMap($ret_m_properties, $m_cqfp.get($cqfp))
+		#end
+	#end
+	
+#end
+
+##Order method - make an ordered list (1. Order value 2.Alphabetic), from a map(Key - orderNumber, Value - Attribute list with same order number)
+#macro ( createOrderedListFromOrderAttributeList, $m_order_attributeList, $l_orderedAttributeList)
+	$l_orderedAttributeList.clear()
+	#foreach($orderKey in $sortTool.sort( $m_order_attributeList.keySet() ))
+		#set ( $l_attrWithSameOrder = $m_order_attributeList.get($orderKey) )
+		#set ( $l_attrNames = [] )
+		
+		##copy into a list all of the attribute names
+		#foreach($currAttribute in $l_attrWithSameOrder)
+			#addToList($l_attrNames, ${currAttribute.name})
+		#end
+		
+		#set ( $l_attrNames = $sortTool.sort($l_attrNames) )
+		#foreach($attrName in $l_attrNames)
+			#foreach($currAttribute in $l_attrWithSameOrder)
+				#if( ${currAttribute.name} == $attrName )
+					#addToList($l_orderedAttributeList, $currAttribute)
+				#end
+			#end
+		#end
+	#end
+#end
+
+##Determine the hasMoreCF and hasMoreCQFP variables value. If the entity has more CF than hasMoreCF = true and hasMoreCQFP = true.
+##If the entity has only one CF, but more CQFP than hasMoreCQFP = true.
+#macro ( hasMoreCfAndCqfp, $csProps )
+	#if ( $csProps.keySet().size() > 1)
+		#set ( $hasMoreCF = true )
+		#set ( $hasMoreCQFP = true )
+	#else
+		#set ( $hasMoreCF = false )
+		#foreach($cf in $csProps.keySet())
+			#set ( $m_cqfp =  $csProps.get($cf) )
+			#if ( $m_cqfp.keySet().size() > 1 )
+				#set ( $hasMoreCQFP = true )
+			#else
+				#set ( $hasMoreCQFP = false )
+			#end
+		#end
+	#end
+	
+#end
+
+	
+#set ( $m_cellSpecProperties = {})
+
+#if ($class.hasAnnotation($HYPER_ENTITY))
+	##HyperEntity
+	#set ( $hyperEntityNamespace = $class.annotations.get($HYPER_ENTITY).getParamValue($NAMESPACE) )
+	#set ( $hyperEntityTable = $class.annotations.get($HYPER_ENTITY).getParamValue($TABLE) )
+	#set ( $hyperEntityGroupCommitIntervalMillis = $class.annotations.get($HYPER_ENTITY).getParamValue($GROUP_COMMIT_INTERVAL_MILLIS) )
+	#set ( $cellSerializationDescriptors = $class.annotations.get($HYPER_ENTITY).getNestedAnnotationList($CELL_SERIALIZATION_DESCRIPTORS) )
+	#set ( $hyperEntityRowKeySerializationType = $class.annotations.get($HYPER_ENTITY).getParamValue($ROW_KEY_SERIALIZATION_TYPE) )
+	#set ( $hyperEntityGlobalColumnQualifierSerializationType = $class.annotations.get($HYPER_ENTITY).getParamValue($GLOBAL_COLUMNS_QUALIFIER_SERIALIZATION_TYPE) )
+	#set ( $hyperEntityGlobalValueSerializationType = $class.annotations.get($HYPER_ENTITY).getParamValue($GLOBAL_VALUE_SERIALIZATION_TYPE) )
+	#set ( $hyperEntityAccessGroups = $class.annotations.get($HYPER_ENTITY).getNestedAnnotationList($ACCESS_GROUPS) )
+	
+	##RowKey
+	#set ( $l_orderedRowKey = [] )
+	$l_orderedRowKey.clear()
+	#set ( $m_order_rowKeyList = {} )
+	$m_order_rowKeyList.clear()
+	
+	##Timestamp
+	#set ( $timestampAssignmentType = $TAT_AUTO_HYPERTABLE )
+	#set ( $fixedTimestamp = "" )
+	#set ( $hasTimestampField = false )
+	#set ( $timestampFieldName = "" )
+	#set ( $timestampFieldNameU1 = "" )
+	
+	##ValueField
+	#set ( $hasMoreCF = false )
+	#set ( $hasMoreCQFP = false ) 
+	
+	##isSingleCell
+	#set ( $isSingleCell = true )
+	
+	##hasCollection
+	#set ( $hasCollection = false )
+	
+	##hasList
+	#set ( $hasList = false )
+
+	##hasMap
+	#set ( $hasMap = false )
+
+	##hasNonCollection
+	#set ( $hasNonCollection = false )
+	
+	##ValueList
+	#set ( $l_valueListAttributes = [] )
+	$l_valueListAttributes.clear()
+	
+	##ValueMap
+	#set ( $l_valueMapAttributes = [] )
+	$l_valueMapAttributes.clear()
+	#set($m_ValueMapSecondGenTypes = {})
+	
+	##SearchMethods
+	#set ( $l_RKBSearchMethods = [] )
+	#set ( $m_RKBSearchMethod_nameBase = {} )
+	#set ( $m_RKBSearchMethod_delete = {} )
+	#set ( $m_RKBSearchMethod_select = {} )
+	#set ( $m_RKBSearchMethod_lastSearchFieldName = {} )
+	#set ( $m_RKBSearchMethod_lastSearchFieldParamType = {} )
+	#set ( $m_RKBSearchMethod_specifyTimestamp = {} )
+	#set ( $m_RKBSearchMethod_rowLimitType = {} )
+	#set ( $m_RKBSearchMethod_fixedRowLimit = {} )
+	#set ( $m_RKBSearchMethod_resultType = {} )
+	#set ( $m_RKBSearchMethod_allowRegExp = {} )
+	
+	#if ( $class.hasAnnotation($SEARCH_METHODS) )
+		#set ( $searchmethods = $class.annotations.get($SEARCH_METHODS) )
+		#set ( $rowKeyBasedSearchMethods = $searchmethods.getNestedAnnotationList($ROW_KEY_BASED_SEARCH_METHODS) )
+		#if ($rowKeyBasedSearchMethods)
+			#foreach($key in $rowKeyBasedSearchMethods)
+				#addToList($l_RKBSearchMethods $key)
+				#putToMap($m_RKBSearchMethod_nameBase, $key, $key.getParamValue($NAME_BASE))
+				#putToMap($m_RKBSearchMethod_delete, $key, $key.getParamValue($DELETE))
+				#putToMap($m_RKBSearchMethod_select, $key, $key.getParamValue($SELECT))
+				#putToMap($m_RKBSearchMethod_lastSearchFieldName, $key, $key.getParamValue($LAST_SEARCH_FIELD_NAME))
+				#putToMap($m_RKBSearchMethod_lastSearchFieldParamType, $key, $key.getParamValue($LAST_SEARCH_FIELD_PARAM_TYPE))
+				#putToMap($m_RKBSearchMethod_specifyTimestamp, $key, $key.getParamValue($SPECIFY_TIMESTAMP))
+				#putToMap($m_RKBSearchMethod_rowLimitType, $key, $key.getParamValue($ROW_LIMIT_TYPE))
+				#putToMap($m_RKBSearchMethod_fixedRowLimit, $key, $key.getParamValue($FIXED_ROW_LIMIT))
+				#putToMap($m_RKBSearchMethod_resultType, $key, $key.getParamValue($RESULT_TYPE))
+				#putToMap($m_RKBSearchMethod_allowRegExp, $key, $key.getParamValue($ALLOW_REG_EXP))
+			#end
+		#end
+	#end
+	
+	##iterate through the attributes' annotations
+	#set ($attributes = $class.attributes)
+	#foreach( $attribute in $attributes)
+		
+    	##===================[ROWKEY]===================
+    	##===[create a map: map[orderNumber => AttributesWithThatOrderNum]===
+		#if ( $attribute.hasAnnotation($ROW_KEY_FIELD) )
+			##initialize currentOrder and get the current attribute's order number
+			#set ( $currentOrder = -1 )
+			#set ( $currentOrder = $currentOrder.parseInt( $attribute.getAnnotationParamValue($ROW_KEY_FIELD, $ORDER) ) )
+
+			##declare an empty list to the rowkeys
+			#set ( $ordersList = [] )
+			
+			#if ( $m_order_rowKeyList.keySet().contains($currentOrder) )
+				##get the (may) already created list to the currentOrder
+				#set( $ordersList = $m_order_rowKeyList.get($currentOrder) )
+			#end
+			
+			##add the attribe to the list (which is empty or the existing list from the map)
+			##use set to avoid display "true" on output
+			#addToList($ordersList, $attribute)
+			
+			##put the attribute back to the map
+			#putToMap($m_order_rowKeyList, $currentOrder, $ordersList)
+		#end
+
+
+
+		##===================[TIMESTAMP]===================
+		#if($attribute.hasAnnotation($TIMESTAMP))
+			#set ( $timestampAssignmentType = $attribute.getAnnotationParamValue($TIMESTAMP, $ASSIGNMENT_TYPE) )
+			#set ( $fixedTimestamp = $attribute.getAnnotationParamValue($TIMESTAMP, $FIXED_TIMESTAMP) )
+			#if (!$fixedTimestamp)
+				#set ($fixedTimestamp = 0)
+			#end ## #if (!$fixedTimestamp)
+			#set ( $hasTimestampField = true ) 
+			#set ( $timestampFieldName = $attribute.name )
+			#set ( $timestampFieldNameU1 = $attribute.getNameU1() )
+		#end
+		
+		
+		##===================[VALUEFIELDS]===================
+		#if ($attribute.hasAnnotation($VALUE_FIELD))
+			##get the current attribute's cell field type
+			#set ( $currentCellFieldType = $attribute.getAnnotationParamValue($VALUE_FIELD, $CELL_FIELD) )
+			##get the current attribute's column qualifier fixed part
+			#set ( $currentColumnQualifierFixedPart = $attribute.getAnnotationParamValue($VALUE_FIELD, $COLUMN_QUALIFIER_FIXED_PART) )
+			##get the current attribute's column family
+			#set ( $currentColumnFamily = $attribute.getAnnotationParamValue($VALUE_FIELD, $COLUMN_FAMILY) )
+			##get the current attribute's order number
+			#set ( $currentOrder = $attribute.getAnnotationParamValue($VALUE_FIELD, $ORDER) )
+			##generate cellSpec from CF and CQFP
+			#set ( $cellSpec = $currentColumnFamily + "_" + $currentColumnQualifierFixedPart )
+			##put default 'false' value into hasValueField and hasCqField
+			## do it only if the given CellSpec has not been reached yet, otherwise we may overwrite the values set previously
+			#set($m_tmpProps = {})
+			#getCellSpecPropertyMap($m_tmpProps, $currentColumnFamily, $currentColumnQualifierFixedPart)
+			#if (!$m_tmpProps.keySet().contains($CSP_HASVALUEFIELD))
+				#putCellSpecProperty ( $currentColumnFamily, $currentColumnQualifierFixedPart, $CSP_HASVALUEFIELD, $FALSE)
+			#end ## if
+			#if (!$m_tmpProps.keySet().contains($CSP_HASCQFIELD))
+				#putCellSpecProperty ( $currentColumnFamily, $currentColumnQualifierFixedPart, $CSP_HASCQFIELD, $FALSE)
+			#end ## if
+			
+			##put cellSpec string into the cellProperties map
+			#putCellSpecProperty( $currentColumnFamily, $currentColumnQualifierFixedPart, $CSP_CELLSPEC, $cellSpec ) 
+			
+			##put default CQ serializer
+			#putCellSpecProperty( $currentColumnFamily, $currentColumnQualifierFixedPart, $CSP_CQSERIALIZER, $hyperEntityGlobalColumnQualifierSerializationType )
+			
+			##put default value serializer
+			#putCellSpecProperty( $currentColumnFamily, $currentColumnQualifierFixedPart, $CSP_VALUESERIALIZER, $hyperEntityGlobalValueSerializationType )
+			
+			## create Java-specific Serializer properties
+			## CQ
+			#set ( $l_CQSerType = [] )
+			#setSerVarTypeBySerType($l_CQSerType, $hyperEntityGlobalColumnQualifierSerializationType, $classname, $TRUE, $cellSpec, $TRUE)
+			#putCellSpecProperty( $currentColumnFamily, $currentColumnQualifierFixedPart, $CSP_CQSERJAVATYPE, $l_CQSerType.get(0) )
+			#set ( $l_CQSerName = [] )
+			#setSerVarNameBySerType($l_CQSerName, $hyperEntityGlobalColumnQualifierSerializationType, $classnameL1, $TRUE, $cellSpec, $TRUE)
+			#putCellSpecProperty( $currentColumnFamily, $currentColumnQualifierFixedPart, $CSP_CQSERJAVAVARNAME, $l_CQSerName.get(0) )
+			## Value
+			#set ( $l_ValueSerType = [] )
+			#setSerVarTypeBySerType($l_ValueSerType, $hyperEntityGlobalValueSerializationType, $classname, $TRUE, $cellSpec, $FALSE)
+			#putCellSpecProperty( $currentColumnFamily, $currentColumnQualifierFixedPart, $CSP_VALUESERJAVATYPE, $l_ValueSerType.get(0) )
+			#set ( $l_ValueSerName = [] )
+			#setSerVarNameBySerType($l_ValueSerName, $hyperEntityGlobalValueSerializationType, $classnameL1, $TRUE, $cellSpec, $FALSE)
+			#putCellSpecProperty( $currentColumnFamily, $currentColumnQualifierFixedPart, $CSP_VALUESERJAVAVARNAME, $l_ValueSerName.get(0) )
+			##get the property map
+			#set ( $m_props = {})
+			#getCellSpecPropertyMap( $m_props, $currentColumnFamily, $currentColumnQualifierFixedPart )
+			
+			##temporary maps to store order and on the attributes with that order
+			#set ( $m_order_valueFieldListCQ = {} )
+			#set ( $m_order_valueFieldListValue = {} )
+			
+			##get the current order value and CQ maps
+			#if ( $m_props.keySet().contains($CSP_ORDER_CQATTRIBUTES) )
+				#set ( $m_order_valueFieldListCQ = $m_props.get($CSP_ORDER_CQATTRIBUTES) )
+			#end
+			#if ( $m_props.keySet().contains($CSP_ORDER_VALUEATTRIBUTES) )
+				#set ( $m_order_valueFieldListValue = $m_props.get($CSP_ORDER_VALUEATTRIBUTES) )
+			#end
+			
+			
+			##declare an empty list to the valuefield
+			#set ( $ordersList = [] )
+			
+			#if ( $currentCellFieldType == $CFT_VALUE )
+				##put a hasValueField(TRUE) flag into the cellProperties map
+				#putCellSpecProperty( $currentColumnFamily, $currentColumnQualifierFixedPart, $CSP_HASVALUEFIELD, $TRUE )
+				
+				#if ( $m_order_valueFieldListValue.keySet().contains($currentOrder) )
+    				##get the (may) already created list to the currentOrder
+    				#set( $ordersList = $m_order_valueFieldListValue.get($currentOrder) )
+				#end
+			#elseif ( $currentCellFieldType == $CFT_CQ )
+				##put a hasCQField(TRUE) flag into the cellProperties map
+				#putCellSpecProperty( $currentColumnFamily, $currentColumnQualifierFixedPart, $CSP_HASCQFIELD, $TRUE )
+
+				#if ( $m_order_valueFieldListCQ.keySet().contains($currentOrder) )
+    				##get the (may) already created list to the currentOrder
+    				#set( $ordersList = $m_order_valueFieldListCQ.get($currentOrder) )
+				#end
+			#end
+
+			##add the attribe to the list (which is empty or the existing list from the map)
+			#mute ( $ordersList.add($attribute) )
+			
+			#if ( $currentCellFieldType == $CFT_VALUE )
+				##put the attribute list back to the map
+				#putToMap($m_order_valueFieldListValue, $currentOrder, $ordersList)
+				#putCellSpecProperty( $currentColumnFamily, $currentColumnQualifierFixedPart, $CSP_ORDER_VALUEATTRIBUTES, $m_order_valueFieldListValue )
+			#elseif ( $currentCellFieldType == $CFT_CQ )
+				##put the attribute list back to the map
+				#putToMap($m_order_valueFieldListCQ, $currentOrder, $ordersList)
+				#putCellSpecProperty( $currentColumnFamily, $currentColumnQualifierFixedPart, $CSP_ORDER_CQATTRIBUTES, $m_order_valueFieldListCQ )
+			#end
+		#end
+				
+		
+		##===================[VALUEMAP]===================
+		#if($attribute.hasAnnotation($VALUE_MAP))
+			#addToList($l_valueMapAttributes, $attribute)
+			## add map field's value type to a separate map
+            #set($l_SecondGenType = [])
+            #getSecondGenType($l_SecondGenType, $attribute.type)
+			#mute($m_ValueMapSecondGenTypes.put($attribute.name, $l_SecondGenType.get(0)))
+			#set ( $hasCollection = true )
+			#set ( $hasMap = true )
+		#end
+		
+		
+		##===================[VALUELIST]===================
+		#if($attribute.hasAnnotation($VALUE_LIST))
+			#addToList($l_valueListAttributes, $attribute)
+			#set ( $hasCollection = true )
+			#set ( $hasList = true )
+		#end
+	#end ## foreach( $attribute in $attributes)
+	
+	##===================[PROCESS SERIALIZATION DESCRIPTORS]===================
+	#foreach($descriptor in $cellSerializationDescriptors)
+		#set ( $cf = $descriptor.getParamValue($COLUMN_FAMILY) )
+		#set ( $cqfp = $descriptor.getParamValue($COLUMN_QUALIFIER_FIXED_PART) )
+		
+		#set ( $cqSerType = $descriptor.getParamValue($COLUMN_QUALIFIER_SERIALIZATION_TYPE) )
+		#set ( $valSerType = $descriptor.getParamValue($VALUE_SERIALIZATION_TYPE) )
+		
+		##put cqSer and valSer into the cellProperties map
+		#putCellSpecProperty ( $cf, $cqfp, $CSP_VALUESERIALIZER, $valSerType)
+		#putCellSpecProperty ( $cf, $cqfp, $CSP_CQSERIALIZER, $cqSerType)
+
+		#set($m_props = {})
+		#getCellSpecPropertyMap($m_props, $cf, $cqfp)
+		#set($cellSpec = $m_props.get($CSP_CELLSPEC))
+		## create Java-specific Serializer properties based on the serialization descriptors
+		## CQ
+		#set ( $l_CQSerType = [] )
+		#setSerVarTypeBySerType($l_CQSerType, $cqSerType, $classname, $TRUE, $cellSpec, $TRUE)
+		#putCellSpecProperty( $cf, $cqfp, $CSP_CQSERJAVATYPE, $l_CQSerType.get(0) )
+		#set ( $l_CQSerName = [] )
+		#setSerVarNameBySerType($l_CQSerName, $cqSerType, $classnameL1, $TRUE, $cellSpec, $TRUE)
+		#putCellSpecProperty( $cf, $cqfp, $CSP_CQSERJAVAVARNAME, $l_CQSerName.get(0) )
+		## Value
+		#set ( $l_ValueSerType = [] )
+		#setSerVarTypeBySerType($l_ValueSerType, $valSerType, $classname, $TRUE, $cellSpec, $FALSE)
+		#putCellSpecProperty( $cf, $cqfp, $CSP_VALUESERJAVATYPE, $l_ValueSerType.get(0) )
+		#set ( $l_ValueSerName = [] )
+		#setSerVarNameBySerType($l_ValueSerName, $valSerType, $classnameL1, $TRUE, $cellSpec, $FALSE)
+		#putCellSpecProperty( $cf, $cqfp, $CSP_VALUESERJAVAVARNAME, $l_ValueSerName.get(0) )
+##		$l_CQSerType.get(0)
+##		$l_CQSerName.get(0)
+##		$l_ValueSerType.get(0)
+##		$l_ValueSerName.get(0)
+	#end
+	
+	##===================[COLLECT NECESSARY SERIALIZERS]===================
+	#set($l_RowKeySerJavaType = [])
+	#set($l_RowKeySerJavaVarName = [])
+	#set($dummy = "")
+	#setSerVarTypeBySerType($l_RowKeySerJavaType, $hyperEntityRowKeySerializationType, $classname, $FALSE, $dummy, $FALSE)
+	#setSerVarNameBySerType($l_RowKeySerJavaVarName, $hyperEntityRowKeySerializationType, $classnameL1, $FALSE, $dummy, $FALSE)
+	#set($rowKeySerJavaVarName = $l_RowKeySerJavaVarName.get(0))
+	#set($rowKeySerJavaType = $l_RowKeySerJavaType.get(0))
+	#set( $globallyRequiredCSSers = {} )
+	#foreach($cf in $m_cellSpecProperties.keySet())
+    	#if ($cf)
+            #set( $m_cqfp = $m_cellSpecProperties.get($cf) )
+			#if ($m_cqfp)
+                #foreach($cqfp in $m_cqfp.keySet())
+					#set($m_props = $m_cqfp.get($cqfp))
+            		#if ($m_props)
+						#set($cellSpec = $m_props.get($CSP_CELLSPEC))
+						#if ($m_props.get($CSP_HASCQFIELD) == $TRUE)
+    						#set($serType = $m_props.get($CSP_CQSERIALIZER))
+    						#set($serTypeJavaType = $m_props.get($CSP_CQSERJAVATYPE))
+    						#set($serTypeJavaVarName = $m_props.get($CSP_CQSERJAVAVARNAME))
+							#set($cellFieldIsCQ = $TRUE)
+							#set($l_JavaType = [])
+							#setSerVarTypeBySerType($l_JavaType, $serType, $classname, $TRUE, $cellSpec, $cellFieldIsCQ)
+							#mute($globallyRequiredCSSers.put($serTypeJavaVarName, { $SERDESC_JAVATYPE : $l_JavaType.get(0) }))
+						#end ## if (CSP_HASCQFIELD)
+						#if ($m_props.get($CSP_HASVALUEFIELD) == $TRUE)
+    						#set($serType = $m_props.get($CSP_VALUESERIALIZER))
+    						#set($serTypeJavaType = $m_props.get($CSP_VALUESERJAVATYPE))
+    						#set($serTypeJavaVarName = $m_props.get($CSP_VALUESERJAVAVARNAME))
+							#set($cellFieldIsCQ = $FALSE)
+							#set($l_JavaType = [])
+							#setSerVarTypeBySerType($l_JavaType, $serType, $classname, $TRUE, $cellSpec, $cellFieldIsCQ)
+							#mute($globallyRequiredCSSers.put($serTypeJavaVarName, { $SERDESC_JAVATYPE : $l_JavaType.get(0) }))
+						#end ## if (CSP_HASVALUEFIELD)
+            		#end ## if
+                #end ## foreach
+			#end ## if ($m_cqfp)
+    	#end ## if ($cf)
+    #end ## foreach
+
+	##has more CF or CQFP? - the macro set the hasMoreCF and hasMoreCQFP variables
+	#hasMoreCfAndCqfp( $m_cellSpecProperties )
+	
+	#set ( $rowKeySerReused = false )
+	#if ($globallyRequiredCSSers.keySet().contains($rowKeySerJavaVarName))
+		#set($rowKeySerReused = $TRUE)
+	#end
+	
+	##identify is entity single cell or multicell
+	#if ( ($hasCollection == $TRUE) || ($hasMoreCF == $TRUE) || ($hasMoreCQFP == $TRUE) )
+		#set ( $isSingleCell = false )
+	#end
+
+	#if($m_cellSpecProperties.keySet().size() > 0)
+		#set ( $hasNonCollection = true )
+	#end
+	
+	#if ($hasCollection == $TRUE)
+		## add binary serializer to necessary serializers
+		#mute($globallyRequiredCSSers.put($ST_VARNAME_BINARY, { $SERDESC_JAVATYPE : $ST_VARTYPE_BINARY }))
+	#end
+
+	##===================[SORT THE NECESSARY VALUES]===================
+	##SORT VALUE FIELDS
+	#foreach ( $cf in $m_cellSpecProperties.keySet() )
+		#set ( $m_cqfp = $m_cellSpecProperties.get($cf) )
+		#foreach( $cqfp in $m_cqfp.keySet())
+			#set ( $m_props = $m_cqfp.get($cqfp) )
+			#set ( $l_orderedValueFieldListCQ = [] )
+			#set ( $l_orderedValueFieldListValue = [] )
+			
+			#set ( $m_order_valueFieldListCQ = {} )
+			#set ( $m_order_valueFieldListValue = {} )
+			#set ( $m_order_valueFieldListCQ = $m_props.get($CSP_ORDER_CQATTRIBUTES) )
+			#set ( $m_order_valueFieldListValue = $m_props.get($CSP_ORDER_VALUEATTRIBUTES) )
+
+			#createOrderedListFromOrderAttributeList( $m_order_valueFieldListCQ, $l_orderedValueFieldListCQ)
+			#createOrderedListFromOrderAttributeList( $m_order_valueFieldListValue, $l_orderedValueFieldListValue)
+			
+			#putCellSpecProperty( $cf, $cqfp, $CSP_ORDEREDCQATTRIBUTES, $l_orderedValueFieldListCQ )
+			#putCellSpecProperty( $cf, $cqfp, $CSP_ORDEREDVALUEATTRIBUTES, $l_orderedValueFieldListValue )
+		#end
+	#end
+	
+	##SORT ROW KEY
+	$l_orderedRowKey.clear()
+	#createOrderedListFromOrderAttributeList($m_order_rowKeyList, $l_orderedRowKey)
+
+	##===================[TIMESTAMP HANDLING CONSISTENCY]===================
+	#if (!$hasTimestampField)
+		#set($timestampAssignmentType = $TAT_AUTO_HYPERTABLE)
+	#end
+	#if (!$isSingleCell && $timestampAssignmentType == $TAT_AUTO_HYPERTABLE)
+		## don't allow Hypertable timestamp assignment if not single cell HyperEntity type
+		#set ($timestampAssignmentType = $TAT_AUTO_HYPERCONNECTOR)
+	#end ## if (!$isSingleCell && ...)
+
+	#set($assignTimestampToCells = ($hasTimestampField && ($timestampAssignmentType != $TAT_AUTO_HYPERTABLE)))
+#else
+	Class is not a HyperEntity.
+#end

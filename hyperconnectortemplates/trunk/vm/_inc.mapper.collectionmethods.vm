@@ -1,0 +1,166 @@
+#macro (collectionMethods)
+	#if ($hasList == $TRUE)
+		#foreach($field in $l_valueListAttributes)
+	public String getColumnQualifier_ListField_${field.name}($ST_VARTYPE_BINARY $ST_VARNAME_BINARY, int entryKey) throws HyperSerializationException {
+		// prepare column qualifier, set fixed part
+		String columnQualifier = HyperConstants.columnQualifierFixedPart_List + HyperConstants.columnQualifierFixedPartSeparator;
+
+		// add field name and entry key to column qualifier
+		${ST_VARNAME_BINARY}.writeString(listFieldName_${field.name});
+		${ST_VARNAME_BINARY}.writeint(entryKey);
+		columnQualifier += ${ST_VARNAME_BINARY}.getValueAsNonNullCharString();
+
+		return columnQualifier;
+	}
+
+    		#set($fieldFirstGenType = ${field.fistGenType})
+	private byte[] getValue_ListField_${field.name}($ST_VARTYPE_BINARY $ST_VARNAME_BINARY, $fieldFirstGenType entryValue) throws HyperSerializationException {
+		${ST_VARNAME_BINARY}.write${fieldFirstGenType}(entryValue);
+		return ${ST_VARNAME_BINARY}.getValue();
+	}
+
+	private void appendCellList_ListField_${field.name}(List<Cell> cells, $classname hyperEntity, $ST_VARTYPE_BINARY $ST_VARNAME_BINARY, String rowKey, long timestamp) throws HyperSerializationException {
+		${field.type} ${field.name} = hyperEntity.get${field.getNameU1()}();
+		if (${field.name} != null && ${field.name}.size() > 0) {
+			String columnFamily = HyperConstants.collectionColumnFamily;
+			
+			int i = 0;
+			for (${fieldFirstGenType} listItem : ${field.name}) {
+				if (listItem == null)
+					continue;
+				String columnQualifier = getColumnQualifier_ListField_${field.name}($ST_VARNAME_BINARY, i);
+				${ST_VARNAME_BINARY}.reset();
+				byte[] value = getValue_ListField_${field.name}($ST_VARNAME_BINARY, listItem);
+				${ST_VARNAME_BINARY}.reset();
+				cells.add(getCell(rowKey, timestamp, columnFamily, columnQualifier, value));
+				i++;
+			}
+		}
+	}
+
+	private void processCell_ListField_${field.name}(Cell cell, $classname hyperEntity, $ST_VARTYPE_BINARY $ST_VARNAME_BINARY) throws HyperMappingException, HyperSerializationException {
+		${ST_VARNAME_BINARY}.setValue(cell.getValue());
+		${fieldFirstGenType} listItem = ${ST_VARNAME_BINARY}.read${fieldFirstGenType}();
+		hyperEntity.get${field.getNameU1()}().add(listItem);
+	}
+		#end ## foreach
+	#end ## if (hasList)
+
+
+
+	#if ($hasMap == $TRUE)
+		#foreach($field in $l_valueMapAttributes)
+    		#set($fieldFirstGenType = ${field.fistGenType})
+			#set($fieldSecondGenType = $m_ValueMapSecondGenTypes.get(${field.name}))
+	public String getColumnQualifier_MapField_${field.name}($fieldFirstGenType entryKey) throws HyperSerializationException {
+		return getColumnQualifier_MapField_${field.name}(new ${ST_VARTYPE_BINARY}(), entryKey);
+	}
+
+	public String getColumnQualifier_MapField_${field.name}($ST_VARTYPE_BINARY $ST_VARNAME_BINARY, $fieldFirstGenType entryKey) throws HyperSerializationException {
+		// prepare column qualifier, set fixed part
+		String columnQualifier = HyperConstants.columnQualifierFixedPart_Map + HyperConstants.columnQualifierFixedPartSeparator;
+
+		// add field name and entry key to column qualifier
+		${ST_VARNAME_BINARY}.writeString(mapFieldName_${field.name});
+		${ST_VARNAME_BINARY}.write${fieldFirstGenType}(entryKey);
+		columnQualifier += ${ST_VARNAME_BINARY}.getValueAsNonNullCharString();
+
+		return columnQualifier;
+	}
+
+	private byte[] getValue_MapField_${field.name}($ST_VARTYPE_BINARY $ST_VARNAME_BINARY, $fieldSecondGenType entryValue) throws HyperSerializationException {
+		${ST_VARNAME_BINARY}.write${fieldSecondGenType}(entryValue);
+		return ${ST_VARNAME_BINARY}.getValue();
+	}
+
+	private void appendCellList_MapField_${field.name}(List<Cell> cells, $classname hyperEntity, $ST_VARTYPE_BINARY $ST_VARNAME_BINARY, String rowKey, long timestamp) throws HyperSerializationException {
+		${field.type} ${field.name} = hyperEntity.get${field.getNameU1()}();
+		if (${field.name} != null && ${field.name}.size() > 0) {
+			String columnFamily = HyperConstants.collectionColumnFamily;
+			
+			for (Entry<${fieldFirstGenType}, ${fieldSecondGenType}> mapValue : ${field.name}.entrySet()) {
+				if (mapValue == null)
+					continue;
+				String columnQualifier = getColumnQualifier_MapField_${field.name}($ST_VARNAME_BINARY, mapValue.getKey());
+				${ST_VARNAME_BINARY}.reset();
+				byte[] value = getValue_MapField_${field.name}($ST_VARNAME_BINARY, mapValue.getValue());
+				${ST_VARNAME_BINARY}.reset();
+				cells.add(getCell(rowKey, timestamp, columnFamily, columnQualifier, value));
+			}
+		}
+	}
+
+	private void processCell_MapField_${field.name}(Cell cell, $classname hyperEntity, $ST_VARTYPE_BINARY $ST_VARNAME_BINARY, ${fieldFirstGenType} entryKey) throws HyperMappingException, HyperSerializationException {
+		${ST_VARNAME_BINARY}.setValue(cell.getValue());
+		${fieldSecondGenType} entryValue = ${ST_VARNAME_BINARY}.read${fieldSecondGenType}();
+		hyperEntity.get${field.getNameU1()}().put(entryKey, entryValue);
+	}
+		#end ## foreach
+	#end ## if (hasMap)
+
+
+
+	#if ($hasList == $TRUE)
+	private void processCell_ListField(Cell cell, $classname hyperEntity, $ST_VARTYPE_BINARY $ST_VARNAME_BINARY, String columnQualifierFields) throws HyperMappingException, HyperSerializationException {
+		// list element; we don't know yet which HyperEntity field it is, it is going to be checked below
+
+		// columnQualifierFields contains the field name and the entry's key
+		// read field name first - entry key is going to be read later
+		${ST_VARNAME_BINARY}.setValueAsNonNullCharString(columnQualifierFields);
+		String fieldName = ${ST_VARNAME_BINARY}.readString(); // not resetting ${ST_VARNAME_BINARY}, key must be read below; key's type depends on fieldName's value
+
+		// check field name
+		if (fieldName == null)
+			throw new HyperMappingException(invalidCell_InvalidColQ_CollectionFieldNameNull);
+		#set($firstField = $TRUE)
+		#foreach($field in $l_valueListAttributes)
+			#if ($firstField == $FALSE)else#end
+		if (fieldName.equals(listFieldName_${field.name})) {
+			// element of field "${field.name}"
+			// columnQualifierFields value partially processed above, key not read yet, read entry key now
+			// key type of field "${field.name}" is String
+			// int entryKey = ${ST_VARNAME_BINARY}.readint(); // not reading entryKey, won't be used anyway
+			${ST_VARNAME_BINARY}.reset();
+			processCell_ListField_${field.name}(cell, hyperEntity, ${ST_VARNAME_BINARY});
+		}
+    		#set($firstField = $FALSE)
+    	#end ## foreach
+		else
+			throw new HyperMappingException(invalidCell_InvalidColQ_InvalidCollectionFieldName);
+	}
+	#end ## if
+
+	#if ($hasMap == $TRUE)
+	private void processCell_MapField(Cell cell, $classname hyperEntity, $ST_VARTYPE_BINARY $ST_VARNAME_BINARY, String columnQualifierFields) throws HyperMappingException, HyperSerializationException {
+		// map element; we don't know yet which HyperEntity field it is, it is going to be checked below
+
+		// columnQualifierFields contains the field name and the entry's key
+		// read field name first - entry key is going to be read later
+		${ST_VARNAME_BINARY}.setValueAsNonNullCharString(columnQualifierFields);
+		String fieldName = ${ST_VARNAME_BINARY}.readString(); // not resetting ${ST_VARNAME_BINARY}, key must be read below; key's type depends on fieldName's value
+
+		// check field name
+		if (fieldName == null)
+			throw new HyperMappingException(invalidCell_InvalidColQ_CollectionFieldNameNull);
+		#set($firstField = $TRUE)
+		#foreach($field in $l_valueMapAttributes)
+    		#set($fieldFirstGenType = ${field.fistGenType})
+			#set($fieldSecondGenType = $m_ValueMapSecondGenTypes.get(${field.name}))
+			#if ($firstField == $FALSE)else#end
+		if (fieldName.equals(mapFieldName_${field.name})) {
+			// element of field "${field.name}"
+			// columnQualifierFields value partially processed above, key not read yet, read entry key now
+			// key type of field "${field.name}" is $fieldFirstGenType
+			$fieldFirstGenType entryKey = ${ST_VARNAME_BINARY}.read$fieldFirstGenType();
+			${ST_VARNAME_BINARY}.reset();
+			processCell_MapField_${field.name}(cell, hyperEntity, ${ST_VARNAME_BINARY}, entryKey);
+		}
+    		#set($firstField = $FALSE)
+    	#end ## foreach
+		else
+			throw new HyperMappingException(invalidCell_InvalidColQ_InvalidCollectionFieldName);
+	}
+	#end ## if
+#end ## macro
+
+#collectionMethods()

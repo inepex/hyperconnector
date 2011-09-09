@@ -1,0 +1,126 @@
+## calls $map.put($key, $value) and prevents its result from being written to the output
+#macro(putToMap, $map, $key, $value)
+	#set($dummy = $map.put($key, $value))
+#end
+
+## calls $map.putAll($mapToPut) and prevents its result from being written to the output
+#macro(putAllToMap, $map, $mapToPut)
+	#set($dummy = $map.putAll($mapToPut))
+#end
+
+## calls $list.add($value) and prevents its result from being written to the output
+#macro(addToList, $list, $value)
+	#set($dummy = $list.add($value))
+#end
+
+## calls $list.addAll($listToAdd) and prevents its result from being written to the output
+#macro(addAllToList, $list, $listToAdd)
+	#set($dummy = $list.addAll($listToAdd))
+#end
+
+## can be used to prevent an operation's result from being written to the output
+#macro(mute, $operationResult)
+	## operationResult must be evaluated in order to force Velocity to actually perform the operation
+	#set ( $avoid_print_true = $operationResult )
+#end
+
+
+
+## value of cellSpec only used for custom serializer and field processor
+#macro ( setSerVarNameBySerType, $return_L_VarName, $serType, $entityName, $isForCellSpec, $cellSpec, $cellFieldIsCQ )
+	#set($prefixForCustomAndFProc = "")
+	#set($postfixForCustomAndFProc = "")
+	#set($cellFieldPostfix = "")
+	#if ($cellFieldIsCQ == $TRUE)
+    	#set($cellFieldPostfix = "_CQ")
+	#else
+    	#set($cellFieldPostfix = "_Value")
+	#end
+	#if ($isForCellSpec == $TRUE)
+		#set($prefixForCustomAndFProc = "cellSpec")
+		#set($postfixForCustomAndFProc = "_" + $cellSpec + $cellFieldPostfix)
+	#else
+		#set($prefixForCustomAndFProc = "rowKey")
+		#set($postfixForCustomAndFProc = "")
+	#end
+	#set($varName = "")
+	#if ($serType == $ST_BINARY)
+		#set($varName = $ST_VARNAME_BINARY)
+	#elseif ($serType == $ST_PLAIN)
+		#set($varName = $ST_VARNAME_PLAIN)
+	#elseif ($serType == $ST_TABDELIMITED)
+		#set($varName = $ST_VARNAME_TABDELIMITED + " /* TAB DELIMITED SERIALIZER CURRENTLY UNSUPPORTED! */ ")
+	#elseif ($serType == $ST_CUSTOM)
+		#set($varName = $prefixForCustomAndFProc + $ST_VARNAMEBODY_CUSTOM + $postfixForCustomAndFProc)
+		#set($varName = $varName + " /* CUSTOM SERIALIZER CURRENTLY UNSUPPORTED! */ ")
+	#elseif ($serType == $ST_FIELDPROCESSOR)
+		#set($varName = $prefixForCustomAndFProc + $ST_VARNAMEBODY_FIELDPROCESSOR + $postfixForCustomAndFProc)
+		#if ($isForCellSpec == $TRUE)
+			#set($varName = $varName + " /* FIELD PROCESSOR CURRENTLY UNSUPPORTED! */ ")
+		#end
+	#end ## if-elseif-... ($serType)
+	#mute($return_L_VarName.add($varName))
+#end ## macro
+
+
+
+## value of cellSpec only used for custom serializer and field processor
+#macro ( setSerVarTypeBySerType, $return_L_VarType, $serType, $entityName, $isForCellSpec, $cellSpec, $cellFieldIsCQ )
+	#set($prefixForCustomAndFProc = "")
+	#set($postfixForCustomAndFProc = "")
+	#set($cellFieldPostfix = "")
+	#if ($cellFieldIsCQ == $TRUE)
+    	#set($cellFieldPostfix = "CQ")
+	#else
+    	#set($cellFieldPostfix = "Value")
+	#end
+	#if ($isForCellSpec == $TRUE)
+		#set($prefixForCustomAndFProc = $entityName + "CellSpec")
+		#set($postfixForCustomAndFProc = "_" + $cellSpec + $cellFieldPostfix)
+	#else
+		#set($prefixForCustomAndFProc = $entityName + "RowKey")
+		#set($postfixForCustomAndFProc = "")
+	#end
+	#set($varType = "")
+	#if ($serType == $ST_BINARY)
+		#set($varType = $ST_VARTYPE_BINARY)
+	#elseif ($serType == $ST_PLAIN)
+		#set($varType = $ST_VARTYPE_PLAIN)
+	#elseif ($serType == $ST_TABDELIMITED)
+		#set($varType = $ST_VARTYPE_TABDELIMITED + " /* TAB DELIMITED SERIALIZER CURRENTLY UNSUPPORTED! */ ")
+	#elseif ($serType == $ST_CUSTOM)
+		#set($varType = $prefixForCustomAndFProc + $ST_VARTYPEBODY_CUSTOM + $postfixForCustomAndFProc)
+		#set($varType = $varType + " /* CUSTOM SERIALIZER CURRENTLY UNSUPPORTED! */ ")
+	#elseif ($serType == $ST_FIELDPROCESSOR)
+		#set($varType = $prefixForCustomAndFProc + $ST_VARTYPEBODY_FIELDPROCESSOR + $postfixForCustomAndFProc)
+		#if ($isForCellSpec == $TRUE)
+			#set($varType = $varType + " /* FIELD PROCESSOR CURRENTLY UNSUPPORTED! */ ")
+		#end
+	#end ## if-elseif-... ($serType)
+	#mute($return_L_VarType.add($varType))
+#end ## macro
+
+## TMP method
+## sets the value of the second generic type in $type to the next place in $return_L_SecondGenType
+## use ONLY for generic types like Map<String, Long> (returns "Long" in this case)
+## for any other types, the return value may not make sense!
+#macro(getSecondGenType, $return_L_SecondGenType, $type)
+	#set($comma = ",")
+	#set($gt = ">")
+	#set($secondGenType = "")
+	#set($commaFound = false)
+	#set($gtFound = false)
+	#set($typeSplit = $type.split($comma))
+	
+	#foreach($str in $typeSplit)
+		#if (${foreach.count} == 2)
+			#set($type2Split = $str.split($gt))
+			#foreach($str2 in $type2Split)
+				#if (${foreach.count} == 1)
+					#set($secondGenType = $str2.trim())
+				#end
+			#end
+		#end
+	#end
+	#mute($return_L_SecondGenType.add($secondGenType))
+#end ## macro

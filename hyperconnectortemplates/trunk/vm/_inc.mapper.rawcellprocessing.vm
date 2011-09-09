@@ -1,0 +1,369 @@
+#macro ( getCellSpecSerParamList, $return_LParamList, $m_CellSpecProps, $addJavaType)
+	#set ( $paramList = "" )
+	#set ( $cellSpec = $m_CellSpecProps.get($CSP_CELLSPEC) )
+	#set ( $hasCQField = $m_CellSpecProps.get($CSP_HASCQFIELD) )
+	#set ( $hasValueField = $m_CellSpecProps.get($CSP_HASVALUEFIELD) )
+	#set ( $cqSerJavaType = $m_CellSpecProps.get($CSP_CQSERJAVATYPE) )
+	#set ( $valueSerJavaType = $m_CellSpecProps.get($CSP_VALUESERJAVATYPE) )
+	#set ( $cqSerVarName = $m_CellSpecProps.get($CSP_CQSERJAVAVARNAME) )
+	#set ( $valueSerVarName = $m_CellSpecProps.get($CSP_VALUESERJAVAVARNAME) )
+	#if (($hasCQField == $TRUE) && ($hasValueField == $TRUE))
+		#if ($addJavaType == $TRUE)
+    		#set( $paramList = $cqSerJavaType + " " + $cqSerVarName )
+		#else
+    		#set( $paramList = $cqSerVarName )
+		#end ## if (addJavaType)
+		#set ( $sameSerializer = ($cqSerVarName == $valueSerVarName) )
+		#if (!$sameSerializer)
+    		#if ($addJavaType == $TRUE)
+        		#set( $paramList = $paramList + ", " + $valueSerJavaType + " " + $valueSerVarName )
+			#else
+    			#set( $paramList = $paramList + ", " + $valueSerVarName )
+    		#end ## if (addJavaType)
+		#end ## if ($sameSerializer)
+	#elseif ($hasCQField == $TRUE)
+		#if ($addJavaType == $TRUE)
+    		#set( $paramList = $cqSerJavaType + " " + $cqSerVarName )
+		#else
+    		#set( $paramList = $cqSerVarName )
+		#end ## if (addJavaType)
+	#elseif ($hasValueField == $TRUE)
+		#if ($addJavaType == $TRUE)
+    		#set( $paramList = $valueSerJavaType + " " + $valueSerVarName )
+		#else
+    		#set( $paramList = $valueSerVarName )
+		#end ## if (addJavaType)
+	#end ## if ($hasCQField && $hasValueField)
+	#mute($return_LParamList.add($paramList))
+#end
+
+#macro ( printCreateCellCall_, $m_CellSpecProps )
+	#set($l_SerParamList = [])
+	#getCellSpecSerParamList($l_SerParamList, $m_CellSpecProps, $FALSE)
+	#set($serParamList = $l_SerParamList.get(0))
+createCell_$cellSpec(hyperEntity, $serParamList, rowKey#if ($assignTimestampToCells == $TRUE), timestamp#end)
+#end ## macro
+
+#macro( createSerializers )
+            ////////// CREATE SERIALIZER INSTANCES
+	#if (!$globallyRequiredCSSers.keySet().contains($rowKeySerJavaVarName))
+			$rowKeySerJavaType $rowKeySerJavaVarName = new ${rowKeySerJavaType}();
+	#end ## if (!contains(rowKeySerJavaVarName))
+	#foreach($serVarName in $globallyRequiredCSSers.keySet())
+		#set($serJavaType = $globallyRequiredCSSers.get($serVarName).get($SERDESC_JAVATYPE))
+		    $serJavaType $serVarName = new ${serJavaType}();
+	#end ## foreach
+
+#end ## macro
+
+#macro( createAndHandleTimestamp )
+	#if (($hasTimestampField == $TRUE) || ($isSingleCell == $FALSE))
+			////////// CREATE TIMESTAMP
+			// Timestamp.assignmentType == $timestampAssignmentType
+    	#if ($timestampAssignmentType == $TAT_AUTO_HYPERCONNECTOR)
+			// timestamp is assigned by HyperConnector
+			long timestamp = HyperDateCommon.utcNowInNanoSecs();
+			#if ($hasTimestampField == $TRUE)
+			hyperEntity.set${timestampFieldNameU1}(timestamp);
+			#end
+    	#elseif ($timestampAssignmentType == $TAT_AUTO_HYPERTABLE)
+			// nothing to do with timestamp (timestamp will not be set in in hyperEntity!)
+    	#elseif ($timestampAssignmentType == $TAT_MANUAL)
+			// not setting timestamp in hyperEntity
+			long timestamp = hyperEntity.get${timestampFieldNameU1}();
+    	#elseif ($timestampAssignmentType == $TAT_FIXED)
+			// timestamp is fixed
+			long timestamp = fixedTimestamp;
+    	#end ## if-elseif-... ($timestampAssignmentType)
+	#end ## if (hasTimestampField)
+#end ## macro
+
+#macro( createRowKey )
+			////////// CREATE ROWKEY
+			String rowKey = createRowKey(hyperEntity, $rowKeySerJavaVarName);
+	#if ($rowKeySerReused == $TRUE)
+    		${rowKeySerJavaVarName}.reset();
+	#end
+
+#end ## macro
+
+#macro( createAndReturnCell )
+	#if ($rowKeySerReused == $TRUE)
+    		${rowKeySerJavaVarName}.reset();
+	#end
+    #set ($cellCreated = false)
+    #foreach($cf in $m_cellSpecProperties.keySet())
+    	#if ($cf)
+            #set( $m_cqfp = $m_cellSpecProperties.get($cf) )
+			#if ($m_cqfp)
+                #foreach($cqfp in $m_cqfp.keySet())
+					#set($m_props = $m_cqfp.get($cqfp))
+            		#if ($m_props && !$cellCreated)
+            			return #printCreateCellCall_($m_props);
+            		#end ## if
+            		#set ($cellCreated = true)
+                #end ## foreach
+			#end ## if ($m_cqfp)
+    	#end ## if ($cf)
+    #end ## foreach
+#end ## macro
+
+#macro( getAllCSSerVarNames, $return_L_SerVarNames, $addJavaType )
+	#set($serVarNames = "")
+    #foreach($varName in $globallyRequiredCSSers.keySet())
+    	#if ($varName)
+            #set( $m_SerProps = $globallyRequiredCSSers.get($varName) )
+			#if ($m_SerProps)
+				#if ($addJavaType == $TRUE)
+					#set($serVarNames = $serVarNames + $m_SerProps.get($SERDESC_JAVATYPE) + " ")
+				#end ## if (addJavaType)
+				#set($serVarNames = $serVarNames + $varName)
+				#if ($foreach.hasNext() == $TRUE)
+					#set($serVarNames = $serVarNames + ", ")
+				#end ## if (hasNext)
+			#end ## if ($m_SerProps)
+    	#end ## if ($varName)
+    #end ## foreach
+	#mute($return_L_SerVarNames.add($serVarNames))
+#end ## macro
+
+#macro( processRawCellCall )
+	#set($l_SerVarNames = [])
+	#getAllCSSerVarNames($l_SerVarNames, $FALSE)
+	#set($serVarNames = $l_SerVarNames.get(0))
+			////////// PROCESS RAW CELLS
+			CommonCellFields ccf = processRawCell(cell, hyperEntity, $serVarNames);
+
+#end ## macro
+
+#macro( processTimestamp )
+	#if ($hasTimestampField == $TRUE)
+			////////// PROCESS TIMESTAMP
+			hyperEntity.set${timestampFieldNameU1}(ccf.timestamp);
+
+	#end ## if (hasTimestampField)
+#end ## macro
+
+#macro( processRowKey )
+			////////// PROCESS ROWKEY
+	#if ($rowKeySerReused == $TRUE)
+    		${rowKeySerJavaVarName}.reset();
+	#end
+			processRowKey(hyperEntity, $rowKeySerJavaVarName, ccf.rowKey);
+
+#end ## macro
+
+#macro(createCollectionCells)
+	#if ($hasList == $TRUE)
+		#foreach($field in $l_valueListAttributes)
+			appendCellList_ListField_${field.name}(cells, hyperEntity, $ST_VARNAME_BINARY, rowKey, timestamp);
+		#end ## foreach
+	#end ## if (hasList)
+	#if ($hasMap == $TRUE)
+		#foreach($field in $l_valueMapAttributes)
+			appendCellList_MapField_${field.name}(cells, hyperEntity, $ST_VARNAME_BINARY, rowKey, timestamp);
+		#end ## foreach
+	#end ## if (hasMap)
+#end ## macro
+
+#macro(createNonCollectionCells)
+	## map to store serializer usage values; if a sertype has already been used, it must be reset before reusing it
+	## custom serializers and field processors will not be used more than once so only check basic serializer types
+	#set($m_SerUsed = { $ST_BINARY : false, $ST_PLAIN : false, $ST_TABDELIMITED : false } )
+    #foreach($cf in $m_cellSpecProperties.keySet())
+    	#set ( $m_cqfp = $m_cellSpecProperties.get($cf) ) 
+    	#foreach($cqfp in $m_cqfp.keySet())
+    		#set ( $m_props = {})
+    		#getCellSpecPropertyMap($m_props $cf $cqfp)
+    		#set ( $l_orderedValueFieldListCQ = $m_props.get($CSP_ORDEREDCQATTRIBUTES) )
+    		#set ( $l_orderedValueFieldListValue = $m_props.get($CSP_ORDEREDVALUEATTRIBUTES) )
+            #set ( $cellSpec = $m_props.get($CSP_CELLSPEC) )
+    		#set ( $hasValueField = $m_props.get($CSP_HASVALUEFIELD) )
+    		#set ( $hasCqField = $m_props.get($CSP_HASCQFIELD) )
+    		#set ( $valueSerializer = $m_props.get($CSP_VALUESERIALIZER) )
+    		#set ( $cqSerializer = $m_props.get($CSP_CQSERIALIZER) )
+    		#set ( $cqSerJavaType = $m_props.get($CSP_CQSERJAVATYPE) )
+    		#set ( $cqSerJavaVarName = $m_props.get($CSP_CQSERJAVAVARNAME) )
+    		#set ( $valueSerJavaType = $m_props.get($CSP_VALUESERJAVATYPE) )
+    		#set ( $valueSerJavaVarName = $m_props.get($CSP_VALUESERJAVAVARNAME) )
+    		#set ( $commonSerializer = (($hasCqField == $TRUE) && ($hasValueField == $TRUE) && ($cqSerJavaVarName == $valueSerJavaVarName)) )
+    		#set ( $commonSerType = "" )
+    		#set ( $commonSerJavaType = "" )
+    		#set ( $commonSerJavaVarName = "" )
+    		#if ($commonSerializer == $TRUE)
+        		#set ( $commonSerType = $cqSerializer )
+        		#set ( $commonSerJavaType = $cqSerJavaType )
+        		#set ( $commonSerJavaVarName = $cqSerJavaVarName )
+				#if ($m_SerUsed.get($commonSerType) == $TRUE)
+			${commonSerJavaVarName}.reset();
+				#end ## if (m_SerUsed.get())
+				#mute ($m_SerUsed.put($commonSerType, $TRUE))
+			#else
+				#if ($hasCqField == $TRUE)
+    				#if ($m_SerUsed.get($cqSerType) == $TRUE)
+			${cqSerJavaVarName}.reset();
+    				#end ## if (m_SerUsed.get())
+    				#mute ($m_SerUsed.put($cqSerType, $TRUE))
+				#end ## if (hasCqField)
+				#if ($hasValueField == $TRUE)
+    				#if ($m_SerUsed.get($valueSerType) == $TRUE)
+			${valueSerJavaVarName}.reset();
+    				#end ## if (m_SerUsed.get())
+    				#mute ($m_SerUsed.put($valueSerType, $TRUE))
+				#end ## if (hasValueField)
+			#end ## if (commonSerializer)
+			cells.add(#printCreateCellCall_($m_props));
+    	#end ## foreach
+    #end ## foreach
+#end ## macro
+
+#macro(createAndReturnCellList)
+			////////// CREATE CELLS
+
+			List<Cell> cells = new ArrayList<Cell>();
+
+## create collection cells first, they will use and reset binarySer
+	#createCollectionCells()
+	#createNonCollectionCells()
+
+			return cells;
+#end ## macro
+
+#macro(processRawCellListCall)
+	#set($l_SerVarNames = [])
+	#getAllCSSerVarNames($l_SerVarNames, $FALSE)
+	#set($serVarNames = $l_SerVarNames.get(0))
+			////////// PROCESS RAW CELLS
+			CommonCellFields ccf = processRawCellList(cells, hyperEntity, $serVarNames);
+
+#end ## macro
+
+
+
+##==================[NON-SINGLE CELL: RAW CELL LIST PROCESSING]==================
+#if (!$isSingleCell)
+	#set($l_SerVarNames = [])
+	#getAllCSSerVarNames($l_SerVarNames, $TRUE)
+	#set($serVarNames = $l_SerVarNames.get(0))
+	private CommonCellFields processRawCellList(List<Cell> cells, $classname hyperEntity, ${serVarNames}) throws HyperMappingException, HyperSerializationException {
+#processRawCellListBodyStart()
+#processRawCellBody()
+#processRawCellListBodyEnd()
+#checkCellProcessedFlags()
+		return new CommonCellFields(rowKey, timestamp);
+	}
+#end ## if (!isSingleCell)
+##==================[/NON-SINGLE CELL: RAW CELL LIST PROCESSING]==================
+
+##==================[SINGLE CELL: RAW CELL PROCESSING]==================
+#if ($isSingleCell)
+	#set($l_SerVarNames = [])
+	#getAllCSSerVarNames($l_SerVarNames, $TRUE)
+	#set($serVarNames = $l_SerVarNames.get(0))
+	private CommonCellFields processRawCell(Cell cell, $classname hyperEntity, ${serVarNames}) throws HyperMappingException, HyperSerializationException {
+#processRawCellVarDeclarations()
+#declareCellProcessedFlags()
+#processRawCellBody()
+#checkCellProcessedFlags()
+		return new CommonCellFields(rowKey, timestamp);
+	}
+#end ## if (isSingleCell)
+##==================[/SINGLE CELL: RAW CELL PROCESSING]==================
+
+##==================[NON-SINGLE CELL: HYPERENTITY TO CELL LIST]==================
+	@Override
+	public List<Cell> hyperEntityToCellList($classname hyperEntity) throws HyperMappingException {
+#if ($isSingleCell)
+        return null;
+#else
+		if (hyperEntity == null)
+			return null;
+
+		try {
+    #createSerializers()
+    #createAndHandleTimestamp()
+    #createRowKey()
+	#createAndReturnCellList()
+		} catch (HyperSerializationException e) {
+			throw getHME(e, mappingFailed);
+		}
+#end
+	}
+##==================[/NON-SINGLE CELL: HYPERENTITY TO CELL LIST]==================
+
+##==================[NON-SINGLE CELL: CELL LIST TO HYPERENTITY]==================
+    @Override
+	public $classname cellListToHyperEntity(List<Cell> cells) throws HyperMappingException {
+#if ($isSingleCell)
+        return null;
+#else
+		if (cells == null)
+			return null;
+		try {
+			// create HyperEntity
+			$classname hyperEntity = new $classname();
+	#foreach($field in $l_valueListAttributes)
+			hyperEntity.set${field.getNameU1()}(new ${field.type}());
+	#end ## foreach
+	#foreach($field in $l_valueMapAttributes)
+			hyperEntity.set${field.getNameU1()}(new ${field.type}());
+	#end ## foreach
+
+	#createSerializers()
+    #processRawCellListCall()
+    #processTimestamp()
+    #processRowKey()
+			return hyperEntity;
+		} catch (HyperSerializationException e) {
+			throw getHME(e, mappingFailed);
+		}
+#end
+	}
+##==================[/NON-SINGLE CELL: CELL LIST TO HYPERENTITY]==================
+
+
+
+##==================[SINGLE CELL: HYPERENTITY TO CELL]==================
+	@Override
+	public Cell hyperEntityToCell($classname hyperEntity) throws HyperMappingException {
+#if (!$isSingleCell)
+         return null;
+#else
+		if (hyperEntity == null)
+			return null;
+
+		try {
+    #createSerializers()
+    #createAndHandleTimestamp()
+    #createRowKey()
+    #createAndReturnCell()
+		} catch (HyperSerializationException e) {
+			throw getHME(e, mappingFailed);
+		}
+#end
+	}
+##==================[/SINGLE CELL: HYPERENTITY TO CELL]==================
+
+##==================[SINGLE CELL: CELL TO HYPERENTITY]==================
+    @Override
+	public $classname cellToHyperEntity(Cell cell) throws HyperMappingException {
+#if (!$isSingleCell)
+        return null;
+#else
+		if (cell == null)
+			return null;
+		try {
+			// create HyperEntity
+			$classname hyperEntity = new $classname();
+
+    #createSerializers()
+    #processRawCellCall()
+    #processTimestamp()
+    #processRowKey()
+			return hyperEntity;
+		} catch (HyperSerializationException e) {
+			throw getHME(e, mappingFailed);
+		}
+#end
+	}
+##==================[/SINGLE CELL: CELL TO HYPERENTITY]==================

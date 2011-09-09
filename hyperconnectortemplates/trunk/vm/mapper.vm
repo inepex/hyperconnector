@@ -1,0 +1,26 @@
+outpath:${class.workspaceRelativePath}mapper/${classname}Mapper.java
+#parse('_inc.entityparser.vm')
+#parse('_inc.mapper.methodbodymacros.vm')
+package ${package}.mapper;
+
+import java.util.Map.Entry;
+import org.hypertable.thriftgen.Cell;
+import org.hypertable.thriftgen.Key;
+import com.inepex.hyperconnector.common.HyperConstants;
+import com.inepex.hyperconnector.common.HyperDateCommon;
+import com.inepex.hyperconnector.mapper.HyperMapperBase;
+import com.inepex.hyperconnector.mapper.HyperMappingException;
+import com.inepex.hyperconnector.serialization.*;
+import java.util.*;
+import ${package}.${classname};
+import ${package}.serialization.*;
+
+public class ${classname}Mapper extends HyperMapperBase<${classname}> {
+
+#parse('_inc.mapper.constants.vm')
+#parse('_inc.mapper.rowkeymethods.vm')
+#parse('_inc.mapper.cellmethods.vm')
+#parse('_inc.mapper.collectionmethods.vm')
+#parse('_inc.mapper.rawcellprocessing.vm')
+
+}

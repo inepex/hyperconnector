@@ -1,0 +1,270 @@
+outpath:${class.workspaceRelativePath}util/${classname}Util.java
+#parse('_inc.entityparser.vm')
+package ${package}.util;
+
+import ${package}.${classname};
+import java.lang.*;
+import java.util.*;
+
+public class ${classname}Util{
+#if ($hasTimestampField == $TRUE)
+	public static boolean equals(${classname} entity1, ${classname} entity2, boolean compareTimestamp){
+		if (entity1 == null && entity2 == null)
+			return true;
+		
+		if (entity1 == null || entity2 == null)
+			return false;
+			
+		boolean equalsValueField = true;
+		equalsValueField =
+##=====[ROWKEYFIELD AND VALUEFIELD PROCESS]=====
+##store that is this the first item or not (no && need before the condition's first item)
+#set ( $isAndOperationMarkNeeded = false)
+#foreach($attribute in ${class.attributes})
+##but skip the @Ttimestamp attribute
+#if(!$attribute.hasAnnotation($TIMESTAMP) && !$attribute.hasAnnotation($VALUE_LIST) && !$attribute.hasAnnotation($VALUE_MAP) && $attribute.annotations.size() > 0 )
+##analyze attribute type: is it a primitive type or a object
+#set ( $isPrimitiveType = false )
+#if ( $ALL_PRIMITIVE_DATA_TYPES.contains( $attribute.type ) )
+#set ( $isPrimitiveType = true )
+#else
+#set ( $isPrimitiveType = false )
+#end##ALL_PRIMITIVE_DATA_TYPES end
+##convert lower case field name to upper case field name at the first char(so fieldName -> FieldName)
+#set ( $firstLetter = $attribute.name.substring(0, 1) )
+#set ( $remainLetter = $attribute.name.substring( 1, $attribute.name.length()) )
+#set ( $firstLetter = $firstLetter.toUpperCase() )
+#set ( $attributeNameInGet = "${firstLetter}${remainLetter}" )
+#if ( $isPrimitiveType )
+#if(${isAndOperationMarkNeeded})&& #else            #end(
+                 entity1.get${attributeNameInGet}() == entity2.get${attributeNameInGet}()
+            )
+#else
+#if(${isAndOperationMarkNeeded})&& #else             #end(
+                 (entity1.get${attributeNameInGet}() == null && entity2.get${attributeNameInGet}() == null)
+                    ||
+                 (entity1.get${attributeNameInGet}() != null && entity1.get${attributeNameInGet}().equals(entity2.get${attributeNameInGet}()))
+            )
+#end
+#set ( $isAndOperationMarkNeeded = true )
+#end##attribute.hasAnnotation if's end
+            #end;##attributes' foreach end
+##=====[END  -  ROWKEYFIELD AND VALUEFIELD PROCESS]=====
+
+
+##=====[VALUEMAP AND VALUELIST PROCESS]=====
+	    boolean collectionsEqual = true;
+#foreach($attribute in ${class.attributes})
+#set ( $attributeName = $attribute.name )
+#set ( $firstLetter = $attribute.name.substring(0, 1) )
+#set ( $remainLetter = $attribute.name.substring( 1, $attribute.name.length()) )
+#set ( $firstLetter = $firstLetter.toUpperCase() )
+#set ( $attributeNameInGet = "${firstLetter}${remainLetter}" )
+#if( $attribute.hasAnnotation($VALUE_LIST) )
+#set ( $genType = $attribute.fistGenType )
+    	List<${genType}> l_first_${attributeName} = entity1.get${attributeNameInGet}();
+    	List<${genType}> l_second_${attributeName} = entity2.get${attributeNameInGet}();
+    	if(l_first_${attributeName} != null && l_second_${attributeName} == null || l_first_${attributeName} == null && l_second_${attributeName} != null){
+    		collectionsEqual = false;
+    	}
+    	if(l_first_${attributeName} != null && l_second_${attributeName} != null && l_first_${attributeName}.size() != l_second_${attributeName}.size()){
+    		collectionsEqual = false;
+    	}
+    	for(int i = 0; i < l_first_${attributeName}.size() && collectionsEqual; i++){
+    		$genType firstItem = l_first_${attributeName}.get(i);
+    		$genType secondItem = l_second_${attributeName}.get(i);
+    		
+    		if(!firstItem.equals(secondItem)){
+    			collectionsEqual = false;
+    			break;
+    		}
+    	}
+#elseif( $attribute.hasAnnotation($VALUE_MAP) )
+#set ( $keyType = "" )
+#set ( $valueType = "" )
+#set ( $gencs = $attribute.typesInGenerics )
+#foreach($gen in $gencs)
+#if ( ${foreach.count} == 1)
+#set ( $keyType = $gen.getNameU1() )
+#end
+#if ( ${foreach.count} == 2)
+#set ( $valueType = $gen.getNameU1() )
+#end
+#end
+		Map<$keyType, $valueType> m_first_${attributeName} = entity1.get${attributeNameInGet}();
+		Map<$keyType, $valueType> m_second_${attributeName} = entity2.get${attributeNameInGet}();
+		
+		if(m_first_${attributeName} != null && m_second_${attributeName} == null || m_first_${attributeName} == null && m_second_${attributeName} != null){
+    		collectionsEqual = false;
+    	}
+    	if(m_first_${attributeName} != null && m_second_${attributeName} != null && m_first_${attributeName}.size() != m_second_${attributeName}.size()){
+    		collectionsEqual = false;
+    	}
+		
+		Set<$keyType> keys_first_${attributeName} = m_first_${attributeName}.keySet();
+		Set<$keyType> keys_second_${attributeName} = m_second_${attributeName}.keySet();
+		if(keys_first_${attributeName}.size() != keys_second_${attributeName}.size()){
+			collectionsEqual = false;
+		}
+		Iterator<$keyType> iterator_${attributeName} = keys_first_${attributeName}.iterator();
+		while(iterator_${attributeName}.hasNext()){
+			$keyType key = iterator_${attributeName}.next();
+			if(!keys_second_${attributeName}.contains(key)){
+				collectionsEqual = false;
+				break;
+			}
+			
+			$valueType firstValue = m_first_${attributeName}.get(key);
+			$valueType secondValue = m_second_${attributeName}.get(key);
+			if(!firstValue.equals(secondValue)){
+				collectionsEqual = false;
+				break;
+			}
+		}
+#end
+#end
+##=====[END  -  VALUEMAP AND VALUELIST PROCESS]=====
+
+
+##=====[TIMESTAMP PROCESS]=====
+    	boolean timestampEquals = true;
+    	if(compareTimestamp == true){
+#foreach($attribute in ${class.attributes})
+#if($attribute.hasAnnotation($TIMESTAMP))
+#set ( $firstLetter = $attribute.name.substring(0, 1) )
+#set ( $remainLetter = $attribute.name.substring( 1, $attribute.name.length()) )
+#set ( $firstLetter = $firstLetter.toUpperCase() )
+#set ( $attributeNameInGet = "${firstLetter}${remainLetter}" )
+		  if(entity1.get${attributeNameInGet}() == entity2.get${attributeNameInGet}()){
+		     timestampEquals = true;
+		  } else {
+			 timestampEquals = false;
+		  }
+#end
+#end##=====[END  -  TIMESTAMP PROCESS]=====
+    	}
+    	return equalsValueField && timestampEquals && collectionsEqual;		
+	}
+##-_-_-_-_-_-_-_=====[COMPARE METHOD WITHOUT COMPARE TIMESTAMP FLAG]=====_-_-_-_-_-_-_-
+#else
+	public static boolean equals(${classname} entity1, ${classname} entity2){
+		if (entity1 == null && entity2 == null)
+			return true;
+		
+		if (entity1 == null || entity2 == null)
+			return false;
+			
+		boolean equalsValueField = true;
+		equalsValueField =
+##=====[ROWKEYFIELD AND VALUEFIELD PROCESS]=====
+##store that is this the first item or not (no && need before the condition's first item)
+#set ( $isAndOperationMarkNeeded = false)
+#foreach($attribute in ${class.attributes})
+##but skip the @Ttimestamp attribute
+#if(!$attribute.hasAnnotation($VALUE_LIST) && !$attribute.hasAnnotation($VALUE_MAP) && $attribute.annotations.size() > 0 )
+##analyze attribute type: is it a primitive type or a object
+#set ( $isPrimitiveType = false )
+#if ( $ALL_PRIMITIVE_DATA_TYPES.contains( $attribute.type ) )
+#set ( $isPrimitiveType = true )
+#else
+#set ( $isPrimitiveType = false )
+#end##ALL_PRIMITIVE_DATA_TYPES end
+##convert lower case field name to upper case field name at the first char(so fieldName -> FieldName)
+#set ( $firstLetter = $attribute.name.substring(0, 1) )
+#set ( $remainLetter = $attribute.name.substring( 1, $attribute.name.length()) )
+#set ( $firstLetter = $firstLetter.toUpperCase() )
+#set ( $attributeNameInGet = "${firstLetter}${remainLetter}" )
+#if ( $isPrimitiveType )
+#if(${isAndOperationMarkNeeded})&& #else            #end(
+                 entity1.get${attributeNameInGet}() == entity2.get${attributeNameInGet}()
+            )
+#else
+#if(${isAndOperationMarkNeeded})&& #else             #end(
+                 (entity1.get${attributeNameInGet}() == null && entity2.get${attributeNameInGet}() == null)
+                    ||
+                 (entity1.get${attributeNameInGet}() != null && entity1.get${attributeNameInGet}().equals(entity2.get${attributeNameInGet}()))
+            )
+#end
+#set ( $isAndOperationMarkNeeded = true )
+#end##attribute.hasAnnotation if's end
+            #end;##attributes' foreach end
+##=====[END  -  ROWKEYFIELD AND VALUEFIELD PROCESS]=====
+
+
+##=====[VALUEMAP AND VALUELIST PROCESS]=====
+	    boolean collectionsEqual = true;
+#foreach($attribute in ${class.attributes})
+#set ( $attributeName = $attribute.name )
+#set ( $firstLetter = $attribute.name.substring(0, 1) )
+#set ( $remainLetter = $attribute.name.substring( 1, $attribute.name.length()) )
+#set ( $firstLetter = $firstLetter.toUpperCase() )
+#set ( $attributeNameInGet = "${firstLetter}${remainLetter}" )
+#if( $attribute.hasAnnotation($VALUE_LIST) )
+#set ( $genType = $attribute.fistGenType )
+    	List<${genType}> l_first_${attributeName} = entity1.get${attributeNameInGet}();
+    	List<${genType}> l_second_${attributeName} = entity2.get${attributeNameInGet}();
+    	if(l_first_${attributeName} != null && l_second_${attributeName} == null || l_first_${attributeName} == null && l_second_${attributeName} != null){
+    		collectionsEqual = false;
+    	}
+    	if(l_first_${attributeName} != null && l_second_${attributeName} != null && l_first_${attributeName}.size() != l_second_${attributeName}.size()){
+    		collectionsEqual = false;
+    	}
+    	for(int i = 0; i < l_first_${attributeName}.size() && collectionsEqual; i++){
+    		$genType firstItem = l_first_${attributeName}.get(i);
+    		$genType secondItem = l_second_${attributeName}.get(i);
+    		
+    		if(!firstItem.equals(secondItem)){
+    			collectionsEqual = false;
+    			break;
+    		}
+    	}
+#elseif( $attribute.hasAnnotation($VALUE_MAP) )
+#set ( $keyType = "" )
+#set ( $valueType = "" )
+#set ( $gencs = $attribute.typesInGenerics )
+#foreach($gen in $gencs)
+#if ( ${foreach.count} == 1)
+#set ( $keyType = $gen.getNameU1() )
+#end
+#if ( ${foreach.count} == 2)
+#set ( $valueType = $gen.getNameU1() )
+#end
+#end
+		Map<$keyType, $valueType> m_first_${attributeName} = entity1.get${attributeNameInGet}();
+		Map<$keyType, $valueType> m_second_${attributeName} = entity2.get${attributeNameInGet}();
+		
+		if(m_first_${attributeName} != null && m_second_${attributeName} == null || m_first_${attributeName} == null && m_second_${attributeName} != null){
+    		collectionsEqual = false;
+    	}
+    	if(m_first_${attributeName} != null && m_second_${attributeName} != null && m_first_${attributeName}.size() != m_second_${attributeName}.size()){
+    		collectionsEqual = false;
+    	}
+		
+		Set<$keyType> keys_first_${attributeName} = m_first_${attributeName}.keySet();
+		Set<$keyType> keys_second_${attributeName} = m_second_${attributeName}.keySet();
+		if(keys_first_${attributeName}.size() != keys_second_${attributeName}.size()){
+			collectionsEqual = false;
+		}
+		Iterator<$keyType> iterator_${attributeName} = keys_first_${attributeName}.iterator();
+		while(iterator_${attributeName}.hasNext()){
+			$keyType key = iterator_${attributeName}.next();
+			if(!keys_second_${attributeName}.contains(key)){
+				collectionsEqual = false;
+				break;
+			}
+			
+			$valueType firstValue = m_first_${attributeName}.get(key);
+			$valueType secondValue = m_second_${attributeName}.get(key);
+			if(!firstValue.equals(secondValue)){
+				collectionsEqual = false;
+				break;
+			}
+		}
+#end
+#end
+##=====[END  -  VALUEMAP AND VALUELIST PROCESS]=====
+	
+		return equalsValueField && collectionsEqual;
+	}
+#end
+}

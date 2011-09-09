@@ -1,0 +1,87 @@
+#set ( $HYPER_ENTITY = "HyperEntity" )
+#set ( $NAMESPACE = "namespace" )
+#set ( $TABLE = "table" )
+#set ( $GROUP_COMMIT_INTERVAL_MILLIS = "groupCommitIntervalMillis" )
+#set ( $CELL_SERIALIZATION_DESCRIPTORS = "cellSerializationDescriptors" )
+#set ( $ROW_KEY_SERIALIZATION_TYPE = "rowKeySerializationType" )
+#set ( $GLOBAL_COLUMNS_QUALIFIER_SERIALIZATION_TYPE = "globalColumnQualifierSerializationType")
+#set ( $GLOBAL_VALUE_SERIALIZATION_TYPE = "globalValueSerializationType" )
+#set ( $ACCESS_GROUPS = "accessGroups" )
+#set ( $ROW_KEY_FIELD = "RowKeyField" )
+#set ( $SORT_ORDER = "sortOrder" )
+#set ( $ORDER = "order" )
+#set ( $TIMESTAMP = "Timestamp" )
+#set ( $ASSIGNMENT_TYPE = "assignmentType" )
+#set ( $FIXED_TIMESTAMP = "fixedTimestamp" )
+#set ( $VALUE_FIELD = "ValueField" )
+#set ( $CELL_FIELD = "cellField" )
+#set ( $COLUMN_QUALIFIER_FIXED_PART = "columnQualifierFixedPart" )
+#set ( $COLUMN_FAMILY = "columnFamily" )
+#set ( $COLUMN_QUALIFIER_SERIALIZATION_TYPE = "columnQualifierSerializationType" )
+#set ( $VALUE_SERIALIZATION_TYPE = "valueSerializationType" )
+#set ( $VALUE_MAP = "ValueMap" )
+#set ( $VALUE_LIST = "ValueList" )
+#set ( $COLLECTION_COLUMN_FAMILY = "HyperConnector_Collections")
+#set ( $SEARCH_METHODS = "SearchMethods" )
+#set ( $ROW_KEY_BASED_SEARCH_METHODS = "rowKeyBasedSearchMethods")
+#set ( $NAME_BASE = "nameBase")
+#set ( $DELETE = "delete")
+#set ( $SELECT = "select")
+#set ( $LAST_SEARCH_FIELD_NAME  = "lastSearchFieldName")
+#set ( $LAST_SEARCH_FIELD_PARAM_TYPE = "lastSearchFieldParamType")
+#set ( $SPECIFY_TIMESTAMP = "specifyTimestamp")
+#set ( $ROW_LIMIT_TYPE = "rowLimitType")
+#set ( $FIXED_ROW_LIMIT = "fixedRowLimit")
+#set ( $RESULT_TYPE = "resultType")
+#set ( $ALLOW_REG_EXP = "allowRegExp")
+#set ( $EMPTY_STRING = "" )
+#set ( $TRUE = "true" )
+#set ( $FALSE = "false" )
+#set ( $COLUMN_QUALIFIER_FIXED_PART_SEPARATOR = "_" )
+#set ( $ALL_PRIMITIVE_DATA_TYPES = ["byte", "short", "int", "long", "float", "double", "boolean", "char"] )
+#set ( $ST_BINARY = "SerializationTypes.BINARY" ) ##ST = Serialization Type
+#set ( $ST_PLAIN = "SerializationTypes.PLAIN" )
+#set ( $ST_TABDELIMITED = "SerializationTypes.TABDELIMITED" )
+#set ( $ST_CUSTOM = "SerializationTypes.CUSTOM" )
+#set ( $ST_FIELDPROCESSOR = "SerializationTypes.FIELDPROCESSOR" )
+#set ( $CFT_CQ = "CellFields.COLUMNQUALIFIER" ) ##CFT = Cell Fields Type
+#set ( $CFT_VALUE = "CellFields.VALUE" )
+#set ( $TAT_AUTO_HYPERCONNECTOR = "TimestampAssignmentTypes.AUTO_HYPERCONNECTOR" ) ##TAT = Timestamp Assignment Types
+#set ( $TAT_AUTO_HYPERTABLE = "TimestampAssignmentTypes.AUTO_HYPERTABLE" )
+#set ( $TAT_MANUAL = "TimestampAssignmentTypes.MANUAL" )
+#set ( $TAT_FIXED = "TimestampAssignmentTypes.FIXED" )
+
+## CSP == CellSpecProperties
+#set ( $CSP_CELLSPEC = "cellSpec" ) ## string representation to use in generated code
+#set ( $CSP_HASVALUEFIELD = "hasValueField" ) ## specifies whether the cellspec has HyperEntity fields stored in the cell's value
+#set ( $CSP_HASCQFIELD = "hasCqField" ) ## specifies whether the cellspec has HyperEntity fields stored in the cell's column qualifier
+#set ( $CSP_VALUESERIALIZER = "valueSerializer" ) ## specifies the serializer type of the value fields
+#set ( $CSP_CQSERIALIZER = "cqSerializer" ) ## specifies the serializer type of the column qualifier fields
+#set ( $CSP_ORDEREDVALUEATTRIBUTES = "orderedValueAttributes" ) ## ONLY FOR ENTITYPARSER! - the ordered lists of the attributes in the value field
+#set ( $CSP_ORDEREDCQATTRIBUTES = "orderedCqAttributes" ) ## ONLY FOR ENTITYPARSER! - the ordered lists of the attributes in the column qualifier field
+#set ( $CSP_ORDER_CQATTRIBUTES = "order_cqAttributes" ) ## the ordered lists of the attributes in the column qualifier field
+#set ( $CSP_ORDER_VALUEATTRIBUTES = "order_valueAttributes" ) ## the ordered lists of the attributes in the column qualifier field
+#set ( $CSP_VALUESERJAVATYPE = "valueSerJavaType" ) ## specifies the serializer type of the value fields
+#set ( $CSP_CQSERJAVATYPE = "cqSerJavaType" ) ## specifies the serializer type of the column qualifier fields
+## varName is constructed in a way so that for CustomSer and FProc, it is unique for all
+## CellSpecs and CellFieldTypes in the HyperEntity; for types other than CustomSer and FProc,
+## it's only unique for the given serializer type (e.g. binarySer for BinarySerializer,
+## plainTextSer for PlainTextSerializer etc.)
+#set ( $CSP_VALUESERJAVAVARNAME = "valueSerJavaVarName" ) ## specifies the serializer type of the value fields
+#set ( $CSP_CQSERJAVAVARNAME = "cqSerJavaVarName" ) ## specifies the serializer type of the column qualifier fields
+
+#set ( $ST_VARNAME_BINARY = "binarySer" )
+#set ( $ST_VARNAME_PLAIN = "plainTextSer" )
+#set ( $ST_VARNAME_TABDELIMITED = "tabDelimitedSer" )
+#set ( $ST_VARNAMEBODY_CUSTOM = "CustomSer" )
+#set ( $ST_VARNAMEBODY_FIELDPROCESSOR = "FieldProc" )
+
+#set ( $ST_VARTYPE_BINARY = "BinarySerializer" )
+#set ( $ST_VARTYPE_PLAIN = "PlainTextSerializer" )
+#set ( $ST_VARTYPE_TABDELIMITED = "TabDelimitedSerializer" )
+#set ( $ST_VARTYPEBODY_CUSTOM = "CustomSerializer" )
+#set ( $ST_VARTYPEBODY_FIELDPROCESSOR = "FieldProcessor" )
+
+#set ( $SERDESC_JAVATYPE = "JavaType" )
+#set ( $SERDESC_CF = "CF" )
+#set ( $SERDESC_CQFP = "CQFP" )
