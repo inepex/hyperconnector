@@ -1,24 +1,52 @@
-=Maven=
-Add these lines to your pom.xml:<br/>
- * the address of Inepex repository (copy it under to <i>repositories</i> tag ):
-{{{
-<repository>
-			<id>inepex</id>
-			<name>inepex</name>
-			<url>http://maven.inepex.com:8081/nexus/content/repositories/releases/</url>
-</repository>
-}}}
- * the hyperconnetor dependency (copy it under to <i>dependencies</i> tag)
-{{{
-<dependency>
-			<groupId>com.inepex</groupId>
-			<artifactId>hyperconnector</artifactId>
-			<version>0.9.0.6</version>
-			<scope>compile</scope>
-</dependency>
-}}}
+==Create a project==
+To create a sample project we suggest to use maven ( http://maven.apache.org/download.html ).
 
-Check out the hyperconnectortemplates project into your workspace directory!
+You can create a sample maven project with the next command:
+<code>
+mvn archetype:generate -DgroupId=com.inepex.example -DartifactId=hyperconnectorexample -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
+</code>
+then create the eclipse project files with the next command:
+<code>mvn eclipse:eclipse</code>
+Now you can import the project into Eclipse (File > Import > Existing project into workspace)<br/>
+Now you should add the following lines to your <i>pom.xml</i>:
+{{{
+<repositories>
+	<repository>
+		<id>inepex</id>
+		<name>inepex</name>
+		<url>http://maven.inepex.com:8081/nexus/content/repositories/releases/</url>
+	</repository>
+</repositories>
+
+<build>
+	<resources>
+		<resource>
+			<directory>src/main/java</directory>
+		</resource>
+	</resources>
+</build>
+
+<dependencies>
+<!-- ...here are you other dependencies... -->
+	<dependency>
+		<groupId>com.inepex</groupId>
+		<artifactId>hyperconnector</artifactId>
+		<version>0.9.0.6</version>
+		<scope>compile</scope>
+	</dependency>
+	<dependency>
+		<groupId>junit</groupId>
+		<artifactId>junit</artifactId>
+		<version>4.8.2</version>
+		<scope>test</scope>
+	</dependency>
+</dependencies>
+}}}
+... and now again run {{{mvn eclipse:eclipse}}} in command line (from the root folder of the project). After all refresh the project in eclipse.
+
+==Check out <i>hyperconnectortemplates</i>==
+You should check out the hyperconnectortemplates project what contains all of the template files that are neccessary to code-generation. Repository location: http://hyperconnector.googlecode.com/svn/hyperconnectortemplates/
+
 =Create an entity=
 Like in JPA, an entity is a Java POJO annotated with the specific annotations.<br/>
 The example is based on a ticketing system and we will store Tickets. A ticket is built up from:
