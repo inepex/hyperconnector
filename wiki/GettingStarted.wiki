@@ -98,6 +98,6 @@ public class Ticket {
 }
 }}}
 
-If you followed the instructions, then you should have a project called "hyperconnectortemplates" and classtemplater plugin.
-hyperconnectortemplates project: This project contains all of the template files what is necessary to the code generation.
-classtemplater: eclipse plugin, what do the code generation based on the hyperconnectortemplates' files.
+If you followed the instructions, then you should have a checked out project called "hyperconnectortemplates" and classtemplater plugin.
+ * <i>hyperconnectortemplates project</i>: This project contains all of the template files what is necessary to the code generation.
+ * <i>classtemplater plugin</i>: eclipse plugin, what do the code generation based on the hyperconnectortemplates' files.
