@@ -1,7 +1,16 @@
 =Check out necessary projects=
 
 =Create an entity=
-Like in JPA, an entity is a Java POJO annotated with the specific annotations. Here is a example HyperConnector entity: <br/>
+Like in JPA, an entity is a Java POJO annotated with the specific annotations.<br/>
+The example is based on a ticketing system and we will store Tickets. A ticket is built up from:<br/>
+<ul>
+<li> Title: the title of the ticket (ie.: Server update) </li>
+<li> Description: description of the ticket (ie.: New kernel is available, you shoud update to the new one.) </li>
+<li> Priority: the priority of the ticket (ie.: 5) </li>
+<li> Problem type: the type of the ticket (ie.: Update) </li>
+<li> Is Fixed: is the task has done (ie.: Unfixed) </li>
+</ul> <br/>
+Here is a example HyperConnector entity: <br/>
 
 {{{
 @HyperEntity(namespace="UserSupport", table="Ticket", rowKeySerializationType = SerializationTypes.PLAIN, globalValueSerializationType = SerializationTypes.PLAIN, globalColumnQualifierSerializationType=SerializationTypes.PLAIN)
