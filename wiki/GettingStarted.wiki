@@ -1,16 +1,35 @@
-=Check out necessary projects=
+=Maven=
+Add these lines to your pom.xml:<br/>
+ * the address of Inepex repository (copy it under to <i>repositories</i> tag ):
+{{{
+<repository>
+			<id>inepex</id>
+			<name>inepex</name>
+			<url>http://maven.inepex.com:8081/nexus/content/repositories/releases/</url>
+</repository>
+}}}
+ * the hyperconnetor dependency (copy it under to <i>dependencies</i> tag)
+{{{
+<dependency>
+			<groupId>com.inepex</groupId>
+			<artifactId>hyperconnector</artifactId>
+			<version>0.9.0.6</version>
+			<scope>compile</scope>
+</dependency>
+}}}
 
+Check out the hyperconnectortemplates project into your workspace directory!
 =Create an entity=
 Like in JPA, an entity is a Java POJO annotated with the specific annotations.<br/>
-The example is based on a ticketing system and we will store Tickets. A ticket is built up from:<br/>
+The example is based on a ticketing system and we will store Tickets. A ticket is built up from:
 <ul>
 <li> Title: the title of the ticket (ie.: Server update) </li>
 <li> Description: description of the ticket (ie.: New kernel is available, you shoud update to the new one.) </li>
 <li> Priority: the priority of the ticket (ie.: 5) </li>
 <li> Problem type: the type of the ticket (ie.: Update) </li>
 <li> Is Fixed: is the task has done (ie.: Unfixed) </li>
-</ul> <br/>
-Here is a example HyperConnector entity: <br/>
+</ul>
+And the ticket representing with java object (using the HyperConnector annotations): <br/>
 
 {{{
 @HyperEntity(namespace="UserSupport", table="Ticket", rowKeySerializationType = SerializationTypes.PLAIN, globalValueSerializationType = SerializationTypes.PLAIN, globalColumnQualifierSerializationType=SerializationTypes.PLAIN)
@@ -78,3 +97,7 @@ public class Ticket {
 	
 }
 }}}
+
+If you followed the instructions, then you should have a project called "hyperconnectortemplates" and classtemplater plugin.
+hyperconnectortemplates project: This project contains all of the template files what is necessary to the code generation.
+classtemplater: eclipse plugin, what do the code generation based on the hyperconnectortemplates' files.
