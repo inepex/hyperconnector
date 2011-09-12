@@ -45,7 +45,9 @@ Now you should add the following lines to your <i>pom.xml</i>:
 ... and now again run {{{mvn eclipse:eclipse}}} in command line (from the root folder of the project). After all refresh the project in eclipse.
 
 ==Check out <i>hyperconnectortemplates</i>==
-You should check out the hyperconnectortemplates project what contains all of the template files that are neccessary to code-generation. Repository location: http://hyperconnector.googlecode.com/svn/hyperconnectortemplates/
+You should check out the hyperconnectortemplates project what contains all of the template files that are neccessary to code-generation. Repository location: http://hyperconnector.googlecode.com/svn/hyperconnectortemplates/ <br/>
+Your project should seem like this: <br/>
+[http://hyperconnector.googlecode.com/svn/wiki/projectState1.jpg]
 
 =Create an entity=
 Like in JPA, an entity is a Java POJO annotated with the specific annotations.<br/>
