@@ -152,8 +152,43 @@ As you can see after the code generation you have a <i>Ticket.hql</i> file. This
 Now, your data tables are ready to use!
 
 ==Configure access to database==
+We suggest to create a configurator class (call it now HyperConfigurator). It has a static method that gives back a HyperPoolArgs object what contains the specific connection informations.<br/>
 
+You have to modify:
+  * server's IP address
+  * server's port number (but 38080 is the hypertable's default)
+
+{{{
+public class HyperConfigurator {
+	public static HyperPoolArgs getHPA() {
+		// address and port
+		String hypertableServerAddress = "192.168.1.1";
+		int hypertableServerPort = 38080;
+
+		// other settings
+		int maxWaitMillis = 10;
+		int tryGetCount = 3;
+		int tryCreateCount = 3;
+		int insertFlags = 0;
+		int insertFlushInterval = 0;
+
+		// Client pool and Service pool
+		HyperClientPool hyperClientPool = new HyperClientPool(
+				hypertableServerAddress, hypertableServerPort);
+		HyperHqlServicePool hyperHqlServicePool = new HyperHqlServicePool(
+				hypertableServerAddress, hypertableServerPort);
+
+		// create the pool args
+		HyperPoolArgs hyperPoolArgs = new HyperPoolArgs(hyperClientPool,
+				hyperHqlServicePool, maxWaitMillis, tryGetCount,
+				tryCreateCount, insertFlags, insertFlushInterval);
+
+		return hyperPoolArgs;
+	}
+}
+}}}
 
 ==Insert Tickets into the database==
+Try out what we've done! To do this in the test package create a test.
 
 ==Select all of the Tickets from the database==
