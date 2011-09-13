@@ -132,10 +132,12 @@ public class Ticket {
 Assuming that you have classtemplater plugin:
   # Right click on Ticket.java file
   # Select classtemplater > Generate...
+[http://hyperconnector.googlecode.com/svn/wiki/generateCode1.jpg] <br/>
 In the pop-up window:
   # Select the following items from the list:
    * hyperconnectortemplates - dao.vm
    * hyperconnectortemplates - hql.vm
    * hyperconnectortemplates - mapper.vm
-  # Check <i>Format code<i> checkbox
-  # Click <i>Save and organize (expreimental)<i> button!
+  # Check <i>Format code</i> checkbox
+  # Click <i>Save and organize (expreimental)</i> button!
+[http://hyperconnector.googlecode.com/svn/wiki/generateCode2.jpg]
