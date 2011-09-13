@@ -139,6 +139,7 @@ In the pop-up window:
    * hyperconnectortemplates - mapper.vm
   # Check <i>Format code</i> checkbox
   # Click <i>Save and organize (expreimental)</i> button!
+<i>IMPORTANT: classtemplater plugin not handle properly .hql output, so we suggest to generate the HQL file seperately! (First generate: Dao + mapper; Second generate: Hql)</i>
 [http://hyperconnector.googlecode.com/svn/wiki/generateCode2.jpg] <br/>
 ...and the result: <br/>
 [http://hyperconnector.googlecode.com/svn/wiki/generateCode3.jpg]
