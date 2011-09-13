@@ -140,4 +140,14 @@ In the pop-up window:
    * hyperconnectortemplates - mapper.vm
   # Check <i>Format code</i> checkbox
   # Click <i>Save and organize (expreimental)</i> button!
-[http://hyperconnector.googlecode.com/svn/wiki/generateCode2.jpg]
+[http://hyperconnector.googlecode.com/svn/wiki/generateCode2.jpg] <br/>
+...and the result:
+[http://hyperconnector.googlecode.com/svn/wiki/generateCode3.jpg]
+
+==Create Database==
+As you can see after the code generation you have a <i>Ticket.hql</i> file. This file contains the HQL command that creates the data table in Hypertable.
+  # Open the Ticket.hql
+  # Select all of the lines
+  # Copy and paste it to the Hypertable's shell
+  # Press enter
+Now, your data tables are ready!
