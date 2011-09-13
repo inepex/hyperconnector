@@ -128,6 +128,14 @@ public class Ticket {
 }
 }}}
 
-If you followed the instructions, then you should have a checked out project called "hyperconnectortemplates" and classtemplater plugin.
- * <i>hyperconnectortemplates project</i>: This project contains all of the template files what is necessary to the code generation.
- * <i>classtemplater plugin</i>: eclipse plugin, what do the code generation based on the hyperconnectortemplates' files.
+==Generate classes==
+Assuming that you have classtemplater plugin:
+  # Right click on Ticket.java file
+  # Select classtemplater > Generate...
+In the pop-up window:
+  # Select the following items from the list:
+   * hyperconnectortemplates - dao.vm
+   * hyperconnectortemplates - hql.vm
+   * hyperconnectortemplates - mapper.vm
+  # Check <i>Format code<i> checkbox
+  # Click <i>Save and organize (expreimental)<i> button!
