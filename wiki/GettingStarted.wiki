@@ -52,13 +52,12 @@ Your project should seem like this: <br/>
 =Create an entity=
 Like in JPA, an entity is a Java POJO annotated with the specific annotations.<br/>
 The example is based on a ticketing system and we will store Tickets. A ticket is built up from:
-<ul>
-<li> Title: the title of the ticket (ie.: Server update) </li>
-<li> Description: description of the ticket (ie.: New kernel is available, you shoud update to the new one.) </li>
-<li> Priority: the priority of the ticket (ie.: 5) </li>
-<li> Problem type: the type of the ticket (ie.: Update) </li>
-<li> Is Fixed: is the task has done (ie.: Unfixed) </li>
-</ul>
+  * Title: the title of the ticket (ie.: Server update)
+  * Description: description of the ticket (ie.: New kernel is available, you shoud update to the new one.)
+  * Priority: the priority of the ticket (ie.: 5)
+  * Problem type: the type of the ticket (ie.: Update)
+  * Is Fixed: is the task has done (ie.: false)
+
 And the ticket representing with java object (using the HyperConnector annotations): <br/>
 
 {{{
@@ -141,7 +140,7 @@ In the pop-up window:
   # Check <i>Format code</i> checkbox
   # Click <i>Save and organize (expreimental)</i> button!
 [http://hyperconnector.googlecode.com/svn/wiki/generateCode2.jpg] <br/>
-...and the result:
+...and the result: <br/>
 [http://hyperconnector.googlecode.com/svn/wiki/generateCode3.jpg]
 
 ==Create Database==
@@ -150,4 +149,11 @@ As you can see after the code generation you have a <i>Ticket.hql</i> file. This
   # Select all of the lines
   # Copy and paste it to the Hypertable's shell
   # Press enter
-Now, your data tables are ready!
+Now, your data tables are ready to use!
+
+==Configure access to database==
+
+
+==Insert Tickets into the database==
+
+==Select all of the Tickets from the database==
