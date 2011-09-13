@@ -49,7 +49,7 @@ You should check out the hyperconnectortemplates project what contains all of th
 Your project should seem like this: <br/>
 [http://hyperconnector.googlecode.com/svn/wiki/projectState1.jpg]
 
-=Create an entity=
+==Create an entity==
 Like in JPA, an entity is a Java POJO annotated with the specific annotations.<br/>
 The example is based on a ticketing system and we will store Tickets. A ticket is built up from:
   * Title: the title of the ticket (ie.: Server update)
@@ -188,7 +188,55 @@ public class HyperConfigurator {
 }
 }}}
 
-==Insert Tickets into the database==
-Try out what we've done! To do this in the test package create a test.
+==Insert and select Ticket from Hypertable ==
+Try out what we've done! To do this create a test in the test package
+{{{
+public class InsertTest {
+	@Test
+	public void insertTickets() throws HyperOperationException, HyperMappingException{
+		//CREATE A NEW TICKET
+		Ticket server_update = new Ticket();
+		
+		//Set the name of the server (this will be the key in Hypertable)
+		server_update.setServer("Blade66");
 
-==Select all of the Tickets from the database==
+		//Set the timestamp of the Ticket
+		server_update.setTimestamp( System.currentTimeMillis() );
+		
+		//Set the other properties of the Ticket
+		server_update.setTitle("Kernel update");
+		server_update.setDescription("New kernel version is available, you should update to it!");
+		server_update.setProblemType("UPDATE");
+		server_update.setPriority("HIGH");
+		server_update.setIsFixed(false);
+		
+		//CONFIGURING ACCESS TO THE DATABASE
+		TicketDao dao = new TicketDao( HyperConfigurator.getHPA() );
+		
+		//insert the Ticket
+		dao.insert(server_update);
+		
+		//get all of the tickets
+		List<Ticket> ticket_result = dao.selectAll();
+		
+		for(Ticket t : ticket_result){
+			System.out.println("Server: " + t.getServer());
+			System.out.println("Title: " + t.getTitle());
+			System.out.println("Description: " + t.getDescription());
+			System.out.println("Problem type: " + t.getProblemType());
+			System.out.println("Priority: " + t.getPriority());
+			System.out.println("Is Fixed?" + t.getIsFixed());		}
+	}
+}
+}}}
+
+==Create complex selects==
+If you would like to create any other select than <i>selectAll()</i> (and you may want :)), then we suggest to extend the generated DAO and implement your own selects (<i>In the future we would like to generate the specific selects based on annotations, but now it's just not implemented!</i>). Lets see an example extend based on TicketDao:
+  # Extend the generated DAO class
+  # Create method that creates your ScanSpec
+  # Create public method that gets the parameters
+   # Give these parameters to the ScanSpec creator method
+   # Give this ScanSpec to the {{{selec(ScanSpec ss)}}} method
+   # Give the select's result to the {{{mapper.cellListToHyperEntityList(...)}}}
+   # return the mapper's result to the caller
+And thats all!
