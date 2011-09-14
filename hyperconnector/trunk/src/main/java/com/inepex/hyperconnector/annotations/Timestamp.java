@@ -7,7 +7,7 @@ package com.inepex.hyperconnector.annotations;
  * (upon insertion, HyperConnector assigns timestamp of insertion to all cells of the HyperEntity)
  * and timestamp will not be visible in the HyperEntity upon selection.</p>
  * <p>If there is an annotated field, its value will be used upon insertion according to the value
- * of autoAssigned. If multiple cells are inserted for the same HyperEntity instance, all their
+ * of assignmentType. If multiple cells are inserted for the same HyperEntity instance, all their
  * timestamps will be equal.</p>
  * @author Gabor Dicso
  *
