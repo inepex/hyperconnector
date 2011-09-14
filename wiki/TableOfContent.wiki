@@ -3,5 +3,4 @@
   * [Description]
   * [Requirements]
   * [GettingStarted Getting Started]
-
   * [http://hyperconnector.googlecode.com/svn/hyperconnector/trunk/doc/index.html javadoc]
