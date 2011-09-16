@@ -136,11 +136,6 @@ public class SerializationUtil {
 
 	public static char byteToChar(byte b) {
 		return (char)(b & 0xFF);
-//		byte b = -128;
-//		//To Char
-//		char c = (char)(b & 0xFF);
-//		//To Byte
-//		byte b2 = (byte)(c & 0xFF);	}
 	}
 
 	public static byte charToByte(char c) {
