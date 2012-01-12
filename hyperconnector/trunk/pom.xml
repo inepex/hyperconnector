@@ -50,18 +50,6 @@
 			<version>4.8.2</version>
 			<scope>test</scope>
 		</dependency>
-<!-- 		<dependency> -->
-<!-- 			<groupId>org.apache.thrift</groupId> -->
-<!-- 			<artifactId>libthrift</artifactId> -->
-<!-- 			<version>0.7.0</version> -->
-<!-- 			<scope>compile</scope> -->
-<!-- 		</dependency> -->
-<!-- 		<dependency> -->
-<!-- 			<groupId>com.inepex</groupId> -->
-<!-- 			<artifactId>libthrift.trash_edition</artifactId> -->
-<!-- 			<version>1.0.0</version> -->
-<!-- 			<scope>compile</scope> -->
-<!-- 		</dependency> -->
 		<dependency>
 			<groupId>org.apache.thrift</groupId>
 			<artifactId>libthrift</artifactId>
