@@ -11,7 +11,7 @@ import java.util.List;
 import com.inepex.hyperconnector.HyperConstants;
 import com.inepex.hyperconnector.dao.HyperDaoBase;
 import com.inepex.hyperconnector.dao.HyperOperationException;
-import com.inepex.hyperconnector.hyperthrift.HyperClientPoolArgs;
+import com.inepex.hyperconnector.thrift.HyperPoolArgs;
 import com.inepex.hyperconnector.mapper.HyperMappingException;
 import ${package}.${classname};
 import ${package}.mapper.${classname}Mapper;
@@ -42,8 +42,8 @@ public class ${classname}Dao extends HyperDaoBase {
 
 	protected ${classname}Mapper mapper = new ${classname}Mapper();
 
-	public ${classname}Dao(HyperPoolArgs hyperClientPoolArgs) {
-		super(hyperClientPoolArgs);
+	public ${classname}Dao(HyperPoolArgs hyperPoolArgs) {
+		super(hyperPoolArgs);
 	}
 	
 	@Override
