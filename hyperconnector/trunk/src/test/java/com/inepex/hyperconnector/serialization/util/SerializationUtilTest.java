@@ -6,9 +6,6 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import com.inepex.hyperconnector.serialization.util.SerializationUtil;
-import com.inepex.hyperconnector.serialization.util.IneBitSet;
-
 public class SerializationUtilTest {
 	private void bitSetToByteArrayTestOperation(byte[] bytes) {
 		byte[] convertedBytes = SerializationUtil.bitSetToByteArray(SerializationUtil.byteArrayToBitSet(bytes));

@@ -2,8 +2,8 @@ package com.inepex.thrift;
 
 import org.apache.thrift.transport.TTransportException;
 
-import com.inepex.hyperconnector.thrift.HyperClientPool;
 import com.inepex.hyperconnector.thrift.HyperClientConnection;
+import com.inepex.hyperconnector.thrift.HyperClientPool;
 
 /**
  * @author istvan

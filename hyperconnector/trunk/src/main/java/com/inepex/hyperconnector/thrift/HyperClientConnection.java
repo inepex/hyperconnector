@@ -1,12 +1,13 @@
 package com.inepex.hyperconnector.thrift;
 
-import org.hypertable.thriftgen.ClientService;
-
-import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.TException;
+import org.apache.thrift.transport.TTransport;
+import org.apache.thrift.transport.TTransportException;
+import org.hypertable.thrift.ThriftClient;
 
 import com.inepex.thrift.ThriftConnectionBase;
 
-public class HyperClientConnection extends ThriftConnectionBase<ClientService.Client> {
+public class HyperClientConnection extends ThriftConnectionBase<ThriftClient> {
 
 	public HyperClientConnection(String serverAddress, int serverPort)
 			throws Exception {
@@ -14,8 +15,12 @@ public class HyperClientConnection extends ThriftConnectionBase<ClientService.Cl
 	}
 
 	@Override
-	protected ClientService.Client getNewClient(TProtocol protocol) {
-		ClientService.Client.Factory factory = new ClientService.Client.Factory();
-		return factory.getClient(protocol);
+	protected ThriftClient getNewClient() throws TTransportException, TException {		
+		return ThriftClient.create(serverAddress, serverPort);
+	}
+
+	@Override
+	public TTransport getTransport() {
+		return getClient().getInputProtocol().getTransport();
 	}
 }

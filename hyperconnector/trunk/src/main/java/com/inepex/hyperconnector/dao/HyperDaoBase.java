@@ -13,11 +13,11 @@ import org.hypertable.thriftgen.HqlService;
 import org.hypertable.thriftgen.KeyFlag;
 import org.hypertable.thriftgen.ScanSpec;
 
+import com.inepex.hyperconnector.thrift.HyperClientConnection;
 import com.inepex.hyperconnector.thrift.HyperClientPool;
 import com.inepex.hyperconnector.thrift.HyperHqlServiceConnection;
-import com.inepex.hyperconnector.thrift.HyperPoolArgs;
-import com.inepex.hyperconnector.thrift.HyperClientConnection;
 import com.inepex.hyperconnector.thrift.HyperHqlServicePool;
+import com.inepex.hyperconnector.thrift.HyperPoolArgs;
 import com.inepex.thrift.ResourceCreationException;
 
 public abstract class HyperDaoBase {
@@ -102,8 +102,8 @@ public abstract class HyperDaoBase {
 			ClientService.Client client = hyperConn.getClient();
 			long nsid = client.open_namespace(getNamespace());
 			long mutid = client.open_mutator(nsid, getTable(), insertFlags, insertFlushInterval);
-			client.set_cells(mutid, cells);
-			client.close_mutator(mutid, true);
+			client.mutator_set_cells(mutid, cells);
+			client.mutator_close(mutid);
 		} catch (InterruptedException e) {
 			throw getHOE(e, hyperOperationFailed_Interrupted);
 		} catch (ResourceCreationException e) {
@@ -162,5 +162,9 @@ public abstract class HyperDaoBase {
 				}
 			insert(cells);
 		}
+	}
+	protected void setScanSpecOffset(ScanSpec ss, int rowLimit, int offset){
+		ss.setRow_limit(rowLimit);
+		ss.setRow_offset(offset);
 	}
 }
