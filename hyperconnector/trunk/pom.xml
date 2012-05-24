@@ -5,7 +5,7 @@
 
 	<groupId>com.inepex</groupId>
 	<artifactId>hyperconnector</artifactId>
-	<version>0.9.0.6</version>
+	<version>0.9.5.6</version>
 	<packaging>jar</packaging>
 
 	<name>hyperconnector</name>
