@@ -1,7 +1,7 @@
 package com.inepex.hyperconnector.thrift;
 
-import org.hypertable.thriftgen.HqlService;
 import org.apache.thrift.protocol.TProtocol;
+import org.hypertable.thriftgen.HqlService;
 
 public class HyperHqlService {
 

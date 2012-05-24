@@ -1,12 +1,12 @@
 package com.inepex.hyperconnector.mapper;
 
-import org.hypertable.thriftgen.Cell;
-import org.hypertable.thriftgen.Key;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.hypertable.thriftgen.Cell;
+import org.hypertable.thriftgen.Key;
 
 public abstract class HyperMapperBase<T> {
 	protected class CommonCellFields {

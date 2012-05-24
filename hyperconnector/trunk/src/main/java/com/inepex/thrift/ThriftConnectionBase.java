@@ -1,20 +1,17 @@
 package com.inepex.thrift;
 
-import org.apache.thrift.protocol.TBinaryProtocol;
-import org.apache.thrift.protocol.TProtocol;
-import org.apache.thrift.transport.TFramedTransport;
-import org.apache.thrift.transport.TSocket;
+import org.apache.thrift.TException;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 
+
 public abstract class ThriftConnectionBase<T> {
-	private String serverAddress = "";
-	private int serverPort = 20002;
+	protected String serverAddress = "";
+	protected int serverPort = 20002;
 
 	private int connectionTimeout = 20000;
 	private boolean invalid = false;
 	
-	private TTransport transport = null;
 	private T client = null;
 	
 	public ThriftConnectionBase(String serverAddress, int serverPort) throws Exception {
@@ -23,16 +20,12 @@ public abstract class ThriftConnectionBase<T> {
 		createClient();
 	}
 	
-	protected abstract T getNewClient(TProtocol protocol);
+	protected abstract T getNewClient() throws TTransportException, TException;
 	
 	// Helper funcitons for accessing Inepex core
 	public void createClient() throws Exception {
 		try {			
-			TSocket tSocket = new TSocket(serverAddress, serverPort, connectionTimeout);	
-			transport = new TFramedTransport(tSocket);
-			TProtocol protocol = new TBinaryProtocol(transport);
-			client  = getNewClient(protocol);
-			transport.open();
+			client  = getNewClient();
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new Exception(e.getMessage());
@@ -40,19 +33,10 @@ public abstract class ThriftConnectionBase<T> {
 	}
 	
 	public void closeClient() {	
-		try {
-			if (transport != null) {
-				transport.flush();
-				transport.close();
-			}
-		} catch (TTransportException e) {
-			e.printStackTrace();
-		}
+
 	}
 	
-	public TTransport getTransport() {
-		return transport;
-	}
+	public abstract TTransport getTransport();
 	
 	public T getClient() {
 		return client;

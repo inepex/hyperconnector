@@ -1,15 +1,22 @@
 package com.inepex.hyperconnector.thrift;
 
+import org.apache.thrift.TException;
+import org.apache.thrift.transport.TTransportException;
+import org.hypertable.thrift.ThriftClient;
 import org.hypertable.thriftgen.ClientService;
-import org.apache.thrift.protocol.TProtocol;
 
 public class HyperClient {
 
 	private ClientService.Client client = null;
 	
-	public HyperClient(TProtocol protocol) {
-		ClientService.Client.Factory factory = new ClientService.Client.Factory();
-		client = factory.getClient(protocol);
+	public HyperClient(String serverAddress, int serverPort) {
+		try {
+			client = ThriftClient.create(serverAddress, serverPort);
+		} catch (TTransportException e) {
+			e.printStackTrace();
+		} catch (TException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public ClientService.Client getClient() {
