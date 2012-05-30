@@ -163,8 +163,8 @@ public abstract class HyperDaoBase {
 			insert(cells);
 		}
 	}
-	protected void setScanSpecOffset(ScanSpec ss, int rowLimit, int offset){
-		ss.setRow_limit(rowLimit);
-		ss.setRow_offset(offset);
+	protected void setScanSpecOffset(ScanSpec ss, int cellLimit, int cellOffset){
+		ss.setCell_limit(cellLimit);
+		ss.setCell_offset(cellOffset);
 	}
 }
