@@ -72,40 +72,53 @@ package com.inepex.hyperconnector.annotations;
  *
  */
 public @interface HyperEntity {
+	
 	/**
 	 * The Hypertable namespace of the HyperEntity's table.
 	 */
 	String namespace() default "/";
+	
 	/**
 	 * The name of the HyperEntity's Hypertable table.
 	 */
 	String table();
+	
 	/**
 	 * If set to a value > 0, sets the GROUP_COMMIT_INTERVAL value in the CREATE TABLE command.
 	 */
 	int groupCommitIntervalMillis() default 0;
+	
 	/**
 	 * Describes the serialization type(s) of the HyperEntity's Hypertable cell(s).
 	 */
 	CellSerializationDescriptor[] cellSerializationDescriptors() default { };
+	
 	/**
 	 * Specifies the serialization type of the rowkey of the Hypertable cell(s). If a custom
 	 * RowKeyProvider is used for the HyperEntity, the rowKeySerializationType field may or
 	 * may not be used by it.
 	 */
 	SerializationTypes rowKeySerializationType() default SerializationTypes.BINARY;
+	
 	/**
 	 * Specifies a global default serialization type for the column qualifier fields of the
 	 * HyperEntity's Hypertable cells.
 	 */
 	SerializationTypes globalColumnQualifierSerializationType() default SerializationTypes.BINARY;
+	
 	/**
 	 * Specifies a global default serialization type for the value fields of the
 	 * HyperEntity's Hypertable cells.
 	 */
 	SerializationTypes globalValueSerializationType() default SerializationTypes.BINARY;
+	
 	/**
 	 * Specifies the access groups of the Hypertable table. Optional field.
 	 */
 	AccessGroup[] accessGroups() default { };
+	
+	/**
+	 * Specify that generated dao should use dumped decorator class.
+	 */
+	boolean dumped() default false;
 }
