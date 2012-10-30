@@ -14,7 +14,7 @@ public class DumpedDao implements BottomLevelDao{
 	private final HyperDumper hyperDumper;
 	private final BottomLevelDao bottomLevelDao;
 	
-	protected DumpedDao(HyperDumper hyperDumper, BottomLevelDao bottomLevelDao) {
+	public DumpedDao(HyperDumper hyperDumper, BottomLevelDao bottomLevelDao) {
 		this.hyperDumper=hyperDumper;
 		this.bottomLevelDao=bottomLevelDao;
 	}
