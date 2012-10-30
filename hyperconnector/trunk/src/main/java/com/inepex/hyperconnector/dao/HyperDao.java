@@ -29,6 +29,11 @@ public class HyperDao<T> {
 		if (cell != null)
 			bottomDao.insert(Arrays.asList(cell));
 	}
+	
+	protected final void insert(List<Cell> cells) throws HyperOperationException {
+		if (cells != null)
+			bottomDao.insert(cells);
+	}
 
 	protected final void delete(ScanSpec ss) throws HyperOperationException {
 		List<Cell> cells = bottomDao.select(ss);
@@ -67,6 +72,10 @@ public class HyperDao<T> {
 	public final List<T> select(ScanSpec ss) throws HyperOperationException {
 		return mapper.cellListToHyperEntityList(
 				bottomDao.select(ss));
+	}
+	
+	protected final List<Cell> selectAsCells(ScanSpec ss) throws HyperOperationException {
+		return bottomDao.select(ss);
 	}
 
 	public final List<T> selectAll() throws HyperOperationException {
