@@ -9,7 +9,13 @@ import com.inepex.hyperconnector.dao.HyperOperationException;
 import com.inepex.hyperconnector.mapper.HyperMappingException;
 
 public class InsertApp {
-
+	
+	
+	/**
+	 * 
+	 * Create table with Ticket.hql before run this app!
+	 * 
+	 */
 	public static void main(String[] args) throws HyperOperationException, HyperMappingException {
 		// CREATE A NEW TICKET
 		Ticket newTicket = new Ticket();
@@ -36,14 +42,15 @@ public class InsertApp {
 
 		// get all of the tickets
 		List<Ticket> ticket_result = dao.selectAll();
-		System.out.println("Result size:");
+		System.out.println("Result size: "+ticket_result.size());
 		for (Ticket t : ticket_result) {
 			System.out.println("Server: " + t.getServer());
 			System.out.println("Title: " + t.getTitle());
 			System.out.println("Description: " + t.getDescription());
 			System.out.println("Problem type: " + t.getProblemType());
 			System.out.println("Priority: " + t.getPriority());
-			System.out.println("Is Fixed?" + t.getIsFixed());
+			System.out.println("Is Fixed? " + t.getIsFixed());
+			System.out.println();
 		}
 	}
 

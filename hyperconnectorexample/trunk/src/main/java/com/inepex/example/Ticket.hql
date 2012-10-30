@@ -2,7 +2,7 @@ USE "/";
 
 CREATE NAMESPACE TestUserSupportNameSpace;
 
-USE UserSupport;
+USE TestUserSupportNameSpace;
 
 CREATE TABLE Ticket(description,
 	isFixed,
