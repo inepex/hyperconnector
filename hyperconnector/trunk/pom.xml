@@ -5,7 +5,7 @@
 
 	<groupId>com.inepex</groupId>
 	<artifactId>hyperconnector</artifactId>
-	<version>0.9.5.6</version>
+	<version>0.9.5.7</version>
 	<packaging>jar</packaging>
 
 	<name>hyperconnector</name>
@@ -44,6 +44,11 @@
 		</plugins>
 	</build>
 	<dependencies>
+		<dependency>
+		  <groupId>org.xerial.snappy</groupId>
+		  <artifactId>snappy-java</artifactId>
+		  <version>1.0.5-M3</version>
+		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
