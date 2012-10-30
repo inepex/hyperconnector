@@ -1,0 +1,12 @@
+com.inepex.hyperconnector.annotations
+com.inepex.hyperconnector.common
+com.inepex.hyperconnector.dao
+com.inepex.hyperconnector.dao.bottom
+com.inepex.hyperconnector.dao.dumpeddao
+com.inepex.hyperconnector.dump
+com.inepex.hyperconnector.dumpreader
+com.inepex.hyperconnector.mapper
+com.inepex.hyperconnector.serialization
+com.inepex.hyperconnector.serialization.util
+com.inepex.hyperconnector.thrift
+com.inepex.thrift
