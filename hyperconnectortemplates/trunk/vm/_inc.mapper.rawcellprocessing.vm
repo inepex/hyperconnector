@@ -274,7 +274,7 @@ createCell_$cellSpec(hyperEntity, $serParamList, rowKey#if ($assignTimestampToCe
 	@Override
 	public List<Cell> hyperEntityToCellList($classname hyperEntity) throws HyperMappingException {
 #if ($isSingleCell)
-        return null;
+        throw new UnsupportedOperationException();
 #else
 		if (hyperEntity == null)
 			return null;
@@ -295,7 +295,7 @@ createCell_$cellSpec(hyperEntity, $serParamList, rowKey#if ($assignTimestampToCe
     @Override
 	public $classname cellListToHyperEntity(List<Cell> cells) throws HyperMappingException {
 #if ($isSingleCell)
-        return null;
+        throw new UnsupportedOperationException();
 #else
 		if (cells == null)
 			return null;
@@ -327,7 +327,7 @@ createCell_$cellSpec(hyperEntity, $serParamList, rowKey#if ($assignTimestampToCe
 	@Override
 	public Cell hyperEntityToCell($classname hyperEntity) throws HyperMappingException {
 #if (!$isSingleCell)
-         return null;
+         throw new UnsupportedOperationException();
 #else
 		if (hyperEntity == null)
 			return null;
@@ -348,7 +348,7 @@ createCell_$cellSpec(hyperEntity, $serParamList, rowKey#if ($assignTimestampToCe
     @Override
 	public $classname cellToHyperEntity(Cell cell) throws HyperMappingException {
 #if (!$isSingleCell)
-        return null;
+        throw new UnsupportedOperationException();
 #else
 		if (cell == null)
 			return null;

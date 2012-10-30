@@ -2,21 +2,16 @@ outpath:${class.workspaceRelativePath}dao/${classname}Dao.java
 #parse('_inc.entityparser.vm')
 package ${package}.dao;
 
-import org.hypertable.thriftgen.CellInterval;
-import org.hypertable.thriftgen.ScanSpec;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import com.inepex.hyperconnector.HyperConstants;
-import com.inepex.hyperconnector.dao.HyperDaoBase;
-import com.inepex.hyperconnector.dao.HyperOperationException;
+import com.inepex.hyperconnector.dao.HyperDao;
+import com.inepex.hyperconnector.dao.bottom.BottomLevelDaoImpl;
 import com.inepex.hyperconnector.thrift.HyperPoolArgs;
-import com.inepex.hyperconnector.mapper.HyperMappingException;
+import com.inepex.hyperconnector.dao.dumpeddao.DumpedDao;
+
 import ${package}.${classname};
 import ${package}.mapper.${classname}Mapper;
 
-public class ${classname}Dao extends HyperDaoBase {
+public class ${classname}Dao extends HyperDao<${classname}> {
+	
 	public static final String namespace = "$hyperEntityNamespace";
 	public static final String table = "$hyperEntityTable";
 
@@ -38,52 +33,20 @@ public class ${classname}Dao extends HyperDaoBase {
 ##check is the class has ValueMap or ValueList
 #if ($hasCollection)
 	protected static final String column_HyperConnector_Collections = HyperConstants.collectionColumnFamily;
-#end
+#end 
 
-	protected ${classname}Mapper mapper = new ${classname}Mapper();
-
-	public ${classname}Dao(HyperPoolArgs hyperPoolArgs) {
-		super(hyperPoolArgs);
+#if(${class.annotations.get("HyperEntity").getParamBoolean("dumped")})
+	//be sure, that only one instance exists of HyperDumper
+	public TicketDao(HyperPoolArgs hyperClientPoolArgs, HyperDumper hyperDumper) {
+		super(new DumpedDao(hyperDumper, new BottomLevelDaoImpl(hyperClientPoolArgs, namespace, table)),
+				new ${classname}Mapper());
 	}
-	
-	@Override
-	public String getNamespace() {
-		return namespace;
-	}
-
-	@Override
-	public String getTable() {
-		return table;
-	}
-	
-	public void insert(${classname} hyperEntity) throws HyperOperationException, HyperMappingException {
-#if($isSingleCell)
-		insert(mapper.hyperEntityToCell(hyperEntity));
 #else
-		insert(mapper.hyperEntityToCellList(hyperEntity));
+	public ${classname}Dao(HyperPoolArgs hyperPoolArgs) {
+		super(new BottomLevelDaoImpl(hyperClientPoolArgs, namespace, table),
+			  new ${classname}Mapper());
+	}
 #end
-	}
-
-	public void insertList(List<${classname}> hyperEntityList) throws HyperOperationException {
-		insert(mapper.hyperEntityListToCellList(hyperEntityList));
-	}
 	
-	private ScanSpec getScanSpec_All() {
-		ScanSpec ss = new ScanSpec();
-		List<CellInterval> cis = new ArrayList<CellInterval>();
-		ss.cell_intervals = cis;
-		return ss;
-	}
-	
-	public List<${classname}> selectAll() throws HyperOperationException {
-		return mapper.cellListToHyperEntityList(select(getScanSpec_All()));
-	}
-	
-	public void deleteAll() throws HyperOperationException {
-		delete(getScanSpec_All());
-	}
-	
-##COMPLEX SELECT SPECSPECS NOT IMPLEMENTED YET
-##getScanSpec_...
 }
 	
