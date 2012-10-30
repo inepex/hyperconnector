@@ -1,4 +1,4 @@
-package com.inepex.example.mapper;
+package com.inepex.example.entity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,7 +6,6 @@ import java.util.List;
 import org.hypertable.thriftgen.Cell;
 import org.hypertable.thriftgen.Key;
 
-import com.inepex.example.Ticket;
 import com.inepex.hyperconnector.common.HyperConstants;
 import com.inepex.hyperconnector.mapper.HyperMapperBase;
 import com.inepex.hyperconnector.mapper.HyperMappingException;
@@ -378,12 +377,12 @@ public class TicketMapper extends HyperMapperBase<Ticket> {
 	@Override
 	public Cell hyperEntityToCell(Ticket hyperEntity)
 			throws HyperMappingException {
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Ticket cellToHyperEntity(Cell cell) throws HyperMappingException {
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 }
