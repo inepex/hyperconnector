@@ -1,8 +1,0 @@
-com.inepex.hyperconnector.annotations
-com.inepex.hyperconnector.common
-com.inepex.hyperconnector.dao
-com.inepex.hyperconnector.mapper
-com.inepex.hyperconnector.serialization
-com.inepex.hyperconnector.serialization.util
-com.inepex.hyperconnector.thrift
-com.inepex.thrift
