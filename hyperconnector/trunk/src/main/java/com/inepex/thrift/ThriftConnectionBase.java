@@ -9,7 +9,6 @@ public abstract class ThriftConnectionBase<T> {
 	protected String serverAddress = "";
 	protected int serverPort = 20002;
 
-	private int connectionTimeout = 20000;
 	private boolean invalid = false;
 	
 	private T client = null;
@@ -27,16 +26,15 @@ public abstract class ThriftConnectionBase<T> {
 		try {			
 			client  = getNewClient();
 		} catch (Exception e) {
-			e.printStackTrace();
-			throw new Exception(e.getMessage());
+			throw new Exception(e);
 		}	
 	}
 	
-	public void closeClient() {	
-
-	}
-	
 	public abstract TTransport getTransport();
+	
+	public void closeClient() {
+		getTransport().close();
+	}
 	
 	public T getClient() {
 		return client;
