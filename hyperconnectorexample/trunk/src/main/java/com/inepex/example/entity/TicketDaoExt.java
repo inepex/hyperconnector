@@ -1,4 +1,4 @@
-package com.inepex.example.dao;
+package com.inepex.example.entity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,7 +6,6 @@ import java.util.List;
 import org.hypertable.thriftgen.CellInterval;
 import org.hypertable.thriftgen.ScanSpec;
 
-import com.inepex.example.Ticket;
 import com.inepex.hyperconnector.dao.HyperOperationException;
 import com.inepex.hyperconnector.thrift.HyperPoolArgs;
 
@@ -52,7 +51,7 @@ public class TicketDaoExt extends TicketDao {
 	}
 	
 	public List<Ticket> selectByServerTimestampRange(String server, long timestamp_start, long timestamp_end) throws HyperOperationException {
-		return mapper.cellListToHyperEntityList(select(getScanSpec_ByServerTimestampRange(server, timestamp_start, timestamp_end)));
+		return select(getScanSpec_ByServerTimestampRange(server, timestamp_start, timestamp_end));
 	}
 	
 	public void deleteByServerTimestampRange(String server, long timestamp_start, long timestamp_end) throws HyperOperationException {

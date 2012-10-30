@@ -7,7 +7,7 @@ import com.inepex.hyperconnector.thrift.HyperPoolArgs;
 public class HyperConfigurator {
 	public static HyperPoolArgs getHPA() {
 		// address and port
-		String hypertableServerAddress = "192.168.0.129";
+		String hypertableServerAddress = "localhost";
 		int hypertableServerPort = 38080;
 
 		// other settings
