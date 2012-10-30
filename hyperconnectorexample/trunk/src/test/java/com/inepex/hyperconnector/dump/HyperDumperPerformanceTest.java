@@ -32,14 +32,14 @@ public class HyperDumperPerformanceTest {
 	/**
 	 * 30000 cells
 	 * 
-	 * 305ms for raw write out ResSize: 1164Kb
-	 * 285ms for whole out ResSize: 1164Kb
-	 * 299ms for cell by cell out ResSize: 1164Kb
-	 * 309ms for cell by cell (timing) out ResSize: 1167Kb
+	 * 928ms for raw write out ResSize: 1954Kb
+	 * 882ms for whole out ResSize: 1954Kb
+	 * 925ms for cell by cell out ResSize: 1954Kb
+	 * 978ms for cell by cell (timing) out ResSize: 1960Kb
 	 */
 	@Test
 	public void performance() throws Exception {
-		for(int cellCount : new int[]{10000}) {
+		for(int cellCount : new int[]{30000}) {
 			System.out.println(cellCount+" cells\n");
 			
 			//test data

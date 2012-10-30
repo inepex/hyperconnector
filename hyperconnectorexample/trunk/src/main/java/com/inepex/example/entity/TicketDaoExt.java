@@ -15,7 +15,7 @@ public class TicketDaoExt extends TicketDao {
 		super(hyperClientPoolArgs);
 	}
 
-	private ScanSpec getScanSpec_ByServerTimestampRange(String server, long timestamp_start, long timestamp_end) {
+	public static ScanSpec getScanSpec_ByServerTimestampRange(String server, long timestamp_start, long timestamp_end) {
 		ScanSpec ss = new ScanSpec();
 		
 		List<CellInterval> cis = new ArrayList<CellInterval>();

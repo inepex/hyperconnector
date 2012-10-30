@@ -18,11 +18,11 @@ public class HyperDumpReader {
 	}
 	
 	public Iterator<List<Cell>> createCellIterator() {
-		List<File> matchingFiles = collectMatcingFiles();
+		List<File> matchingFiles = collectMatchingFiles();
 		return new HyperFileReaderIterator(matchingFiles);
 	}
 	
-	private List<File> collectMatcingFiles() {
+	private List<File> collectMatchingFiles() {
 		List<File> matchingFiles = new LinkedList<File>();
 		File startDir = new File(baseDumpFolder);
 		addAllFilesResursive(startDir, matchingFiles, 0);
