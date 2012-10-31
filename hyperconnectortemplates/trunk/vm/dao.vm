@@ -37,7 +37,7 @@ public class ${classname}Dao extends HyperDao<${classname}> {
 
 #if(${class.annotations.get("HyperEntity").getParamBoolean("dumped")})
 	//be sure, that only one instance exists of HyperDumper
-	public TicketDao(HyperPoolArgs hyperClientPoolArgs, HyperDumper hyperDumper) {
+	public ${classname}Dao(HyperPoolArgs hyperClientPoolArgs, HyperDumper hyperDumper) {
 		super(new DumpedDao(hyperDumper, new BottomLevelDaoImpl(hyperClientPoolArgs, namespace, table)),
 				new ${classname}Mapper());
 	}
