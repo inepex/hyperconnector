@@ -4,6 +4,7 @@ import org.apache.thrift.TException;
 import org.hypertable.thriftgen.ClientException;
 import org.hypertable.thriftgen.HqlResult;
 import org.hypertable.thriftgen.HqlService;
+import org.hypertable.thriftgen.ScanSpec;
 
 import com.inepex.hyperconnector.thrift.HyperHqlServiceConnection;
 import com.inepex.hyperconnector.thrift.HyperPoolArgs;
@@ -11,6 +12,11 @@ import com.inepex.thrift.ResourceCreationException;
 import static com.inepex.hyperconnector.dao.HyperOperationException.*;
 
 public class HyperDaoHelper {
+	
+	public static void setScanSpecOffset(ScanSpec ss, int rowLimit, int offset){
+        ss.setRow_limit(rowLimit);
+        ss.setRow_offset(offset);
+	}
 
 	public static HqlResult executeHqlQuery(HyperPoolArgs hyperPoolArgs, String nameSpace, String hqlQuery) throws HyperOperationException {
 		HyperHqlServiceConnection hyperConn = null;
