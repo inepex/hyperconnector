@@ -11,14 +11,9 @@ import java.util.List;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.transport.TMemoryInputTransport;
 import org.hypertable.thriftgen.Cell;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xerial.snappy.SnappyInputStream;
 
-public class HyperFileReaderIterator implements Iterator<List<Cell>> {
-	
-	private static final Logger _logger = LoggerFactory
-			.getLogger(HyperFileReaderIterator.class);
+public class HyperFileReaderIterator implements Iterator<HyperDumpReader.FileContent> {
 
 	private final List<File> matchingFiles;
 	private int currentIndex=0;
@@ -33,13 +28,15 @@ public class HyperFileReaderIterator implements Iterator<List<Cell>> {
 	}
 
 	@Override
-	public List<Cell> next() {
+	public HyperDumpReader.FileContent next() {
 		if(!hasNext())
 			throw new NullPointerException();
 		
 		File dumpfile = matchingFiles.get(currentIndex);
 		currentIndex++;
-		return readAllCellsFromDump(dumpfile);
+		HyperDumpReader.FileContent content = new HyperDumpReader.FileContent();
+		readAllCellsFromDump(dumpfile, content);
+		return content;
 	}
 
 	@Override
@@ -48,7 +45,7 @@ public class HyperFileReaderIterator implements Iterator<List<Cell>> {
 	}
 
 	
-	private List<Cell> readAllCellsFromDump(File dumpFile) {
+	private void readAllCellsFromDump(File dumpFile, HyperDumpReader.FileContent content) {
 		List<Cell> cells = new ArrayList<Cell>();
 		try {
 			byte[] data = readAndUncompressData(dumpFile);
@@ -63,9 +60,11 @@ public class HyperFileReaderIterator implements Iterator<List<Cell>> {
 			}
 			
 		} catch(Exception e) {
-			_logger.error("Exception while reading file: "+dumpFile.getAbsolutePath(), e);
+			content.setReadException(e);
 		}
-		return cells;
+		
+		content.setContent(cells);
+		content.setPath(dumpFile.getAbsolutePath());
 	}
 	
 	private byte[] readAndUncompressData(File file) throws IOException {
@@ -90,7 +89,7 @@ public class HyperFileReaderIterator implements Iterator<List<Cell>> {
 				try {
 					snIs.close();
 				} catch(IOException e) {
-					_logger.error(e.getMessage(), e);
+					e.printStackTrace();
 				}
 			}
 			
@@ -98,7 +97,7 @@ public class HyperFileReaderIterator implements Iterator<List<Cell>> {
 				try {
 					fis.close();
 				} catch(IOException e) {
-					_logger.error(e.getMessage(), e);
+					e.printStackTrace();
 				}
 			}
 		}

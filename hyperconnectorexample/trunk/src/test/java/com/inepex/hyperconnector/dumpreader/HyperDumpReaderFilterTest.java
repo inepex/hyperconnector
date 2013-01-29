@@ -46,4 +46,19 @@ public class HyperDumpReaderFilterTest {
 		assertEquals(false, filter.isMatchingFile("21_UTC"+HyperDumpFileProvider.EXTRADELEXTENSION+HyperDumpFileProvider.EXTENSION));
 		assertEquals(false, filter.isMatchingFile("21_UTC.txt"));
 	}
+	
+	@Test
+	public void testIsMathcingAdditional() {
+		assertEquals(true, new HyperDumpReaderFilter().hour(0).isMatchingFile("00_UTC"+HyperDumpFileProvider.EXTENSION));
+	}
+	
+	@Test(expected=IllegalArgumentException.class)
+	public void testIllegal() {
+		new HyperDumpReaderFilter().day(0);
+	}
+	
+	@Test(expected=IllegalArgumentException.class)
+	public void testIllegal2() {
+		new HyperDumpReaderFilter().day(15, 12);
+	}
 }

@@ -4,10 +4,8 @@ import static com.inepex.hyperconnector.dump.HyperDumperTestShared.deleteDir;
 import static com.inepex.hyperconnector.dump.HyperDumperTestShared.getTestTicket;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -20,6 +18,7 @@ import com.inepex.example.entity.Ticket;
 import com.inepex.example.entity.TicketMapper;
 import com.inepex.hyperconnector.dumpreader.HyperDumpReader;
 import com.inepex.hyperconnector.dumpreader.HyperDumpReaderFilter;
+import com.inepex.hyperconnector.dumpreader.HyperDumpReader.FileContent;
 import com.inepex.hyperconnector.mapper.HyperMappingException;
 
 public class HyperDumperTest {
@@ -27,7 +26,7 @@ public class HyperDumperTest {
 	private static final TicketMapper mapper = new TicketMapper();
 	
 	@Test
-	public void testShutdownRestart() throws HyperMappingException {
+	public void testShutdownRestart() throws Exception {
 		String dumpFolder = "testShutdownRestart_dump";
 		deleteDir(new File(dumpFolder));
 		
@@ -54,7 +53,7 @@ public class HyperDumperTest {
 	}
 
 	@Test
-	public void testDumpCell() throws HyperMappingException, IOException {
+	public void testDumpCell() throws Exception {
 		TestNowProvider tnp = new TestNowProvider();
 		HyperDumper hd = new HyperDumper(
 				tnp,
@@ -82,22 +81,25 @@ public class HyperDumperTest {
 		hd.dumpCells(cells, "InepexNs", "Report");
 	}
 	
-	private List<Ticket> readAllTicketsFromDump(String baseFolder) throws HyperMappingException {
+	private List<Ticket> readAllTicketsFromDump(String baseFolder) throws Exception {
 		HyperDumpReader hdr = new HyperDumpReader(baseFolder,
 				new HyperDumpReaderFilter()
 					.nameSpace("InepexNs")
 					.table("Report"));
 		
 		List<Ticket> reports = new LinkedList<Ticket>();
-		Iterator<List<Cell>> itertor = hdr.createCellIterator();
-		while(itertor.hasNext()) {
-			reports.addAll(mapper.cellListToHyperEntityList(itertor.next()));
+		for(FileContent fc : hdr) {
+			if(fc.hasException())
+				throw fc.getReadException();
+			
+			reports.addAll(mapper.cellListToHyperEntityList(fc.getContent()));
 		}
+		
 		return reports;
 	}
 	
 	@Test
-	public void testLongTimeWriting() throws IOException, HyperMappingException {
+	public void testLongTimeWriting() throws Exception {
 		TestNowProvider nowProv = new TestNowProvider();
 		HyperDumper hd = new HyperDumper(
 				nowProv,

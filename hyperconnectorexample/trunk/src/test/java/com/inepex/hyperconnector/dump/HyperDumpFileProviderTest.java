@@ -10,8 +10,6 @@ import java.util.Calendar;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import com.inepex.hyperconnector.mapper.HyperMappingException;
-
 public class HyperDumpFileProviderTest {
 	
 	@Test
@@ -28,7 +26,7 @@ public class HyperDumpFileProviderTest {
 				"test_dump");
 		
 		Calendar startTime = Calendar.getInstance();
-		startTime.setTimeInMillis(prov.firstClosingStart());
+		startTime.setTimeInMillis(prov.delayUntilFirstClosingStart()+cal.getTimeInMillis());
 		startTime.setTimeZone(HyperDumpFileProvider.UTC);
 		assertEquals(1999, startTime.get(Calendar.YEAR));
 		assertEquals(11, startTime.get(Calendar.MONTH));
@@ -96,7 +94,7 @@ public class HyperDumpFileProviderTest {
 	}
 	
 	@Test
-	public void testDumpFileSystem() throws IOException, HyperMappingException {
+	public void testDumpFileSystem() throws IOException {
 		TestNowProvider nowProv = new TestNowProvider();
 		Calendar cal = Calendar.getInstance();
 		cal.setTimeZone(HyperDumpFileProvider.UTC);

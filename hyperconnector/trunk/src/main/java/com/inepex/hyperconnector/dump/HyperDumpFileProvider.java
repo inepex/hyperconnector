@@ -56,14 +56,14 @@ public class HyperDumpFileProvider {
 				_logger.info("Hourly hyper dumper closing started!");
 				HyperDumpFileProvider.this.closeOldFiles();
 			}
-		}, firstClosingStart(), ONE_HOUR, TimeUnit.MILLISECONDS); 
+		}, delayUntilFirstClosingStart(), ONE_HOUR, TimeUnit.MILLISECONDS); 
 	}
 	
-	long firstClosingStart() {
+	long delayUntilFirstClosingStart() {
 		long now = nowProvider.now();
 		
 		//next XX:05 
-		return (now/ONE_HOUR + 1)*ONE_HOUR + ONE_MINUTE*5;
+		return (now/ONE_HOUR + 1)*ONE_HOUR + ONE_MINUTE*5-now;
 	}
 	
 	String getBaseDumpFolder() {

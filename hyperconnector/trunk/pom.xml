@@ -5,7 +5,7 @@
 
 	<groupId>com.inepex</groupId>
 	<artifactId>hyperconnector</artifactId>
-	<version>0.9.5.8</version>
+	<version>0.9.5.9</version>
 	<packaging>jar</packaging>
 
 	<name>hyperconnector</name>
@@ -59,7 +59,6 @@
 			<groupId>org.apache.thrift</groupId>
 			<artifactId>libthrift</artifactId>
 			<version>0.8.0</version>
-			<scope>compile</scope>
 			<exclusions>
 				<exclusion>
 					<groupId>org.slf4j</groupId>
