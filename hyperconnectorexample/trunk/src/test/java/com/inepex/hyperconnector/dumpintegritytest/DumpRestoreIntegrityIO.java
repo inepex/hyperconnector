@@ -2,13 +2,13 @@ package com.inepex.hyperconnector.dumpintegritytest;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hypertable.thriftgen.Cell;
 
 import com.inepex.hyperconnector.dump.HyperDumperTestShared;
 import com.inepex.hyperconnector.dumpreader.HyperDumpReader;
+import com.inepex.hyperconnector.dumpreader.HyperDumpReader.FileContent;
 import com.inepex.hyperconnector.dumpreader.HyperDumpReaderFilter;
 
 public class DumpRestoreIntegrityIO {
@@ -29,11 +29,14 @@ public class DumpRestoreIntegrityIO {
 		}
 	}
 	
-	public List<Cell> readCells(HyperDumpReaderFilter filter) {
+	public List<Cell> readCells(HyperDumpReaderFilter filter) throws Exception {
 		List<Cell> ret = new ArrayList<Cell>();
 		HyperDumpReader reader = new HyperDumpReader(dumpFolderName, filter);
-		for(Iterator<List<Cell>> cellIt = reader.createCellIterator(); cellIt.hasNext(); ) {
-			ret.addAll(cellIt.next());
+		for(FileContent fc: reader) {
+			if(fc.hasException())
+				throw fc.getReadException();
+			
+			ret.addAll(fc.getContent());
 		}
 		
 		return ret;

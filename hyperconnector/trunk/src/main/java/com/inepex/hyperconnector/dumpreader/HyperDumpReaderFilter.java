@@ -4,7 +4,7 @@ import com.inepex.hyperconnector.dump.HyperDumpFileProvider;
 
 public class HyperDumpReaderFilter {
 
-	public enum Content {
+	public static enum Content {
 		DELETE_ONLY, BOTH, INSERT_ONLY;
 	}
 	
@@ -54,41 +54,49 @@ public class HyperDumpReaderFilter {
 	}
 	
 	public HyperDumpReaderFilter day(int day) {
-		if(day<1 || day>=31)
+		if(day<1 || day>31)
 			throw new IllegalArgumentException();
 		
-		this.day=""+day;
+		if(day>=10)
+			this.day=""+day;
+		else
+			this.day="0"+day;
+		
 		return this;
 	}
 	
 	public HyperDumpReaderFilter day(int fromInclusive, int toExclusive) {
-		checkRange(fromInclusive, toExclusive, 31);
+		checkRange(fromInclusive, toExclusive, 1, 32);
 		day=expr(fromInclusive, toExclusive);
 		return this;
 	}
 	
 	public HyperDumpReaderFilter hour(int hour) {
-		if(hour<1 || hour>=24)
+		if(hour<0 || hour>=24)
 			throw new IllegalArgumentException();
 		
-		this.hour=""+hour;
+		if(hour>=10)
+			this.hour=""+hour;
+		else
+			this.hour="0"+hour;
+		
 		reCalcFileMatcher();
 		return this;
 	}
 	
 	public HyperDumpReaderFilter hour(int fromInclusive, int toExclusive) {
-		checkRange(fromInclusive, toExclusive, 24);
+		checkRange(fromInclusive, toExclusive, 0, 24);
 		hour=expr(fromInclusive, toExclusive);
 		reCalcFileMatcher();
 		return this;
 	}
 	
-	private void checkRange(int fromInclusive, int toExclusive, int maxExclusive) {
-		if(fromInclusive<1 
-				|| toExclusive<1 
+	private void checkRange(int fromInclusive, int toExclusive, int minValueInclusive, int maxValueExclusive) {
+		if(fromInclusive<minValueInclusive
+				|| toExclusive<minValueInclusive
 				|| fromInclusive>=toExclusive 
-				|| fromInclusive>=maxExclusive 
-				|| toExclusive>=maxExclusive)
+				|| fromInclusive>=maxValueExclusive 
+				|| toExclusive>=maxValueExclusive)
 			throw new IllegalArgumentException();
 	}
 	
