@@ -109,7 +109,7 @@ public class HyperDumpRestoreApp {
 				"\t month - number of [1,12] if you set month you must set year too \n" +
 				"\t day - number of [1,31] OR number range from of [1,31] inclusive to of [2,32] exclusive like: 1-15 or 1-32\n" +
 				"\t hour - number of [0, 23] OR number range from of [0, 23] inclusive to of [1, 24] exclusive like: 2-14 or 0-24\n" +
-				"\t content - on of: DELETE_ONLY, INSERT_ONLY, BOTH \n" +
+				"\t content - one of: DELETE_ONLY, INSERT_ONLY, BOTH \n" +
 				"\n" +
 				
 				"minimal params to invoke :\n" +
