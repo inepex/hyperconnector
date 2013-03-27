@@ -162,7 +162,7 @@ public class HyperDumpFileProvider {
 		}
 	}
 	
-	private File outFile(long now, String namespace, String tableName, boolean isDelete) throws IOException {
+	private File outFile(long now, String namespace, String tableName, boolean isDelete) {
 		String pathAndFile = getDumpFileName(now, namespace, tableName, isDelete);
 		
 		createFoldersIfNeed(pathAndFile);
@@ -179,7 +179,7 @@ public class HyperDumpFileProvider {
 		return file;
 	}
 
-	private void createFoldersIfNeed(String pathAndFile) throws IOException {
+	private void createFoldersIfNeed(String pathAndFile) {
 		File file = new File(pathAndFile);
 		if (!file.getParentFile().exists()) {
 			file.getParentFile().mkdirs();
