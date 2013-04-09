@@ -71,7 +71,7 @@ public class HyperDumpFileProvider {
 	}
 	
 	void closeAllFile() {
-		closeOlderThan(Long.MAX_VALUE);
+		closeYoungerThan(Long.MAX_VALUE);
 	}
 	
 	/**
@@ -80,10 +80,10 @@ public class HyperDumpFileProvider {
 	 */
 	void closeOldFiles() {
 		long hourCount = nowProvider.now()/ONE_HOUR;
-		closeOlderThan(hourCount);
+		closeYoungerThan(hourCount);
 	}
 	
-	private synchronized void closeOlderThan(long hourCount) {
+	private synchronized void closeYoungerThan(long hourCount) {
 		Iterator<Map.Entry<Long, Map<String, OpenedStreams>>> entries = hourly.entrySet().iterator();
 		while(entries.hasNext()) {
 			Map.Entry<Long, Map<String, OpenedStreams>> entry=entries.next();
@@ -121,6 +121,9 @@ public class HyperDumpFileProvider {
 			openedStreamsByName.put(name, streams);
 		}
 		
+		if(!streams.file.exists())
+			throw new IOException("File " + streams.file.getAbsolutePath() + " does'nt exits anymore.");
+		
 		return streams.binaryProtocol;
 	}
 
@@ -154,7 +157,7 @@ public class HyperDumpFileProvider {
 			TIOStreamTransport fileTransport = new TIOStreamTransport(snStream);
 			TBinaryProtocol prot = new TBinaryProtocol(fileTransport);
 			fileTransport.open();
-			return new OpenedStreams(prot, snStream, fos);
+			return new OpenedStreams(file, prot, snStream, fos);
 			
 		} catch (TTransportException e) {
 			_logger.error(e.getMessage(), e);
@@ -179,7 +182,7 @@ public class HyperDumpFileProvider {
 		return file;
 	}
 
-	private void createFoldersIfNeed(String pathAndFile) {
+	private static void createFoldersIfNeed(String pathAndFile) {
 		File file = new File(pathAndFile);
 		if (!file.getParentFile().exists()) {
 			file.getParentFile().mkdirs();
@@ -218,14 +221,16 @@ public class HyperDumpFileProvider {
 	}
 	
 	static class OpenedStreams {
+		final File file;
 		final TBinaryProtocol binaryProtocol;
 		final SnappyOutputStream snStream;
 		final FileOutputStream fos;
 		
-		public OpenedStreams(TBinaryProtocol binaryProtocol, SnappyOutputStream snStream, FileOutputStream fos) {
+		public OpenedStreams(File file, TBinaryProtocol binaryProtocol, SnappyOutputStream snStream, FileOutputStream fos) {
 			this.binaryProtocol = binaryProtocol;
 			this.snStream=snStream;
 			this.fos = fos;
+			this.file=file;
 		}
 	}
 }

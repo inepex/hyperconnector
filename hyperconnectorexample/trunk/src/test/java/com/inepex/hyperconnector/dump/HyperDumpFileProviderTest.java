@@ -7,10 +7,57 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Calendar;
 
+import junit.framework.Assert;
+
+import org.apache.thrift.TException;
+import org.apache.thrift.protocol.TBinaryProtocol;
+import org.hypertable.thriftgen.Cell;
+import org.hypertable.thriftgen.Key;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 public class HyperDumpFileProviderTest {
+	
+	@Test
+	public void testThowsIOExceptionOnRemovedDumpfile() {
+		TestNowProvider nowProvider= new TestNowProvider();
+		Calendar cal = Calendar.getInstance();
+		cal.setTimeZone(HyperDumpFileProvider.UTC);
+		cal.set(1999, 11, 20, 21, 19);
+		nowProvider.setNow(cal.getTimeInMillis());
+		
+		HyperDumpFileProvider prov = new HyperDumpFileProvider(
+				nowProvider,
+				Mockito.mock(HyperDumperDelegate.class),
+				"test_dump");
+
+		//cleanup
+		HyperDumperTestShared.deleteDir(new File(prov.getBaseDumpFolder()));
+		
+		try {
+			TBinaryProtocol prot = prov.getStreamFor("namespace", "tableName", false);
+			new Cell(new Key("a", "a", "a", null)).write(prot);
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail();
+		}
+	
+		HyperDumperTestShared.deleteDir(new File(prov.getBaseDumpFolder()));
+		
+		try {
+			TBinaryProtocol prot = prov.getStreamFor("namespace", "tableName", false);
+			new Cell(new Key("a", "a", "a", null)).write(prot);
+			//should throw exceptions
+			Assert.fail();
+		} catch (TException | IOException e) {
+			//ok
+		}
+		
+		prov.closeAllFile();
+		
+		HyperDumperTestShared.deleteDir(new File(prov.getBaseDumpFolder()));
+	}
+	
 	
 	@Test
 	public void testScheduling() {
