@@ -5,7 +5,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AggregatorDaoPool {
+class AggregatorDaoPool {
 
 	private static final int poolStartSize = 4;
 	
@@ -24,7 +24,9 @@ public class AggregatorDaoPool {
 					
 					@Override
 					public Thread newThread(Runnable r) {
-						return new Thread("aggreagtorDao-"+counter.incrementAndGet());
+						Thread th = new Thread(r);
+						th.setName("aggreagtorDao-"+counter.incrementAndGet());
+						return th;
 					}
 				});
 			}
