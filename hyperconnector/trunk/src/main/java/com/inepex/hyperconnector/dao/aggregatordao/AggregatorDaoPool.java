@@ -17,7 +17,7 @@ public class AggregatorDaoPool {
 			return service;
 		
 		synchronized (lock) {
-			if(service!=null) {
+			if(service==null) {
 				service = Executors.newScheduledThreadPool(poolStartSize, new ThreadFactory() {
 					
 					private final AtomicInteger counter = new AtomicInteger();
