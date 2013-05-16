@@ -2,43 +2,48 @@ package com.inepex.hyperconnector.dao.aggregatordao;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.hypertable.thriftgen.Cell;
 import org.hypertable.thriftgen.ScanSpec;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.inepex.hyperconnector.ApplicationDelegate;
 import com.inepex.hyperconnector.dao.HyperOperationException;
 import com.inepex.hyperconnector.dao.bottom.BottomLevelDao;
 
 public class AggregatorDao implements BottomLevelDao{
+	
+	private static final long defaultPeriodMS = 500;	
+	private static final Logger _logger = LoggerFactory
+			.getLogger(AggregatorDao.class);
 
-	private static final long periodMS = 500;
 	
 	private final BottomLevelDao bottomLevelDao;
 	private final ConcurrentLinkedQueue<List<Cell>> inserts = new ConcurrentLinkedQueue<>();
 	
-	static AggregatorDao createTestDao(BottomLevelDao bottomLevelDao) {
-		return new AggregatorDao(bottomLevelDao, null, true);
-	}
-	
 	public AggregatorDao(BottomLevelDao bottomLevelDao, ApplicationDelegate applicationDelegate) {
-		this(bottomLevelDao, applicationDelegate, false);
+		this(bottomLevelDao, applicationDelegate, false, defaultPeriodMS);
 	}
 	
-	private AggregatorDao(BottomLevelDao bottomLevelDao, ApplicationDelegate applicationDelegate, boolean isTestDao) {
+	AggregatorDao(BottomLevelDao bottomLevelDao, ApplicationDelegate applicationDelegate, boolean isTestDao, long periodMS) {
 		this.bottomLevelDao=bottomLevelDao;
 		
 		if(!isTestDao) {
-			AggregatorDaoPool.getService().scheduleAtFixedRate(new Runnable() {
+			AggregatorDaoPool.getService().scheduleWithFixedDelay(new Runnable() {
 				
 				@Override
 				public void run() {
+					try {
 					flushInserts();
+					} catch (Exception e) {
+						_logger.error("", e);
+					}
+					
 				}
-			}, new Random().nextInt((int)periodMS) + periodMS, periodMS, TimeUnit.MILLISECONDS);
+			}, periodMS, periodMS, TimeUnit.MILLISECONDS);
 			
 			applicationDelegate.addShutDownTask(new Runnable() {
 				

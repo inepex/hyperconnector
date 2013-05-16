@@ -1,8 +1,22 @@
 package com.inepex.hyperconnector.dao.aggregatordao;
 
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
+import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hypertable.thriftgen.Cell;
 import org.hypertable.thriftgen.Key;
@@ -10,14 +24,50 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import com.inepex.hyperconnector.ApplicationDelegate;
 import com.inepex.hyperconnector.dao.HyperOperationException;
 import com.inepex.hyperconnector.dao.bottom.BottomLevelDao;
 
-import static junit.framework.Assert.*;
-import static org.mockito.Mockito.*;
-
 public class AggregatorDaoTest {
+	
+	@Test
+	public void poolTest() throws InterruptedException {
+		assertNotNull(AggregatorDaoPool.getService());
+		Runnable mock = mock(Runnable.class);
+		AggregatorDaoPool.getService().scheduleAtFixedRate(mock, 5, 5, TimeUnit.MILLISECONDS);
+		
+		Thread.sleep(30);
+		verify(mock, atLeast(6)).run();
+	}
 
+	@Test
+	public void runTest() throws Exception {
+		BottomLevelDao bottomMock = mock(BottomLevelDao.class);
+		final AtomicInteger result = new AtomicInteger(0);
+		doAnswer(new Answer<Void>() {
+
+			@Override
+			public Void answer(InvocationOnMock invocation) throws Throwable {
+				result.addAndGet(((Collection<?>)invocation.getArguments()[0]).size());
+				return null;
+			}
+		}).when(bottomMock).insert(anyListOf(Cell.class));
+		
+		AggregatorDao dao = new AggregatorDao(bottomMock, mock(ApplicationDelegate.class), false, 50);
+		dao.insert(threeCells());
+		Thread.sleep(10);
+		dao.insert(threeCells());
+		dao.insert(threeCells());
+		Thread.sleep(60);
+		dao.insert(threeCells());
+		Thread.sleep(70);
+		
+		
+		verify(bottomMock, atLeastOnce()).insert(anyListOf(Cell.class));
+		verifyNoMoreInteractions(bottomMock);
+		assertEquals(12, result.get());
+	}
+	
 	@Test
 	public void simpleBehave() throws HyperOperationException {
 		BottomLevelDao bottomMock = mock(BottomLevelDao.class);
@@ -30,7 +80,7 @@ public class AggregatorDaoTest {
 			}
 		}).when(bottomMock).insert(anyListOf(Cell.class));
 		
-		AggregatorDao dao = AggregatorDao.createTestDao(bottomMock);
+		AggregatorDao dao = new AggregatorDao(bottomMock, null, true, 500);
 		
 		dao.insert(threeCells());
 		dao.insert(threeCells());
