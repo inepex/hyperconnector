@@ -5,7 +5,6 @@ import static com.inepex.hyperconnector.dao.HyperOperationException.hyperHqlServ
 import static com.inepex.hyperconnector.dao.HyperOperationException.hyperOperationFailed;
 import static com.inepex.hyperconnector.dao.HyperOperationException.hyperOperationFailed_ClientException;
 import static com.inepex.hyperconnector.dao.HyperOperationException.hyperOperationFailed_Interrupted;
-import static com.inepex.hyperconnector.dao.HyperOperationException.hyperOperationFailed_ResourceCreation;
 import static com.inepex.hyperconnector.dao.HyperOperationException.hyperOperationFailed_ThriftCommError;
 import static com.inepex.hyperconnector.dao.HyperOperationException.hyperPoolArgsNull;
 
@@ -23,7 +22,6 @@ import com.inepex.hyperconnector.thrift.HyperClientConnection;
 import com.inepex.hyperconnector.thrift.HyperClientPool;
 import com.inepex.hyperconnector.thrift.HyperHqlServicePool;
 import com.inepex.hyperconnector.thrift.HyperPoolArgs;
-import com.inepex.thrift.ResourceCreationException;
 
 public class BottomLevelDaoImpl implements BottomLevelDao {
 
@@ -93,8 +91,6 @@ public class BottomLevelDaoImpl implements BottomLevelDao {
 			client.mutator_close(mutid);
 		} catch (InterruptedException e) {
 			throw new HyperOperationException(hyperOperationFailed_Interrupted, e);
-		} catch (ResourceCreationException e) {
-			throw new HyperOperationException(hyperOperationFailed_ResourceCreation, e);
 		} catch (ClientException e) {
 			throw new HyperOperationException(hyperOperationFailed_ClientException, e);
 		} catch (TException e) {
@@ -127,8 +123,6 @@ public class BottomLevelDaoImpl implements BottomLevelDao {
 			return cells;
 		} catch (InterruptedException e) {
 			throw new HyperOperationException(hyperOperationFailed_Interrupted, e);
-		} catch (ResourceCreationException e) {
-			throw new HyperOperationException(hyperOperationFailed_ResourceCreation, e);
 		} catch (ClientException e) {
 			throw new HyperOperationException(hyperOperationFailed_ClientException, e);
 		} catch (TException e) {

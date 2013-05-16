@@ -1,5 +1,10 @@
 package com.inepex.hyperconnector.dao;
 
+import static com.inepex.hyperconnector.dao.HyperOperationException.hyperOperationFailed;
+import static com.inepex.hyperconnector.dao.HyperOperationException.hyperOperationFailed_ClientException;
+import static com.inepex.hyperconnector.dao.HyperOperationException.hyperOperationFailed_Interrupted;
+import static com.inepex.hyperconnector.dao.HyperOperationException.hyperOperationFailed_ThriftCommError;
+
 import org.apache.thrift.TException;
 import org.hypertable.thriftgen.ClientException;
 import org.hypertable.thriftgen.HqlResult;
@@ -8,8 +13,6 @@ import org.hypertable.thriftgen.ScanSpec;
 
 import com.inepex.hyperconnector.thrift.HyperHqlServiceConnection;
 import com.inepex.hyperconnector.thrift.HyperPoolArgs;
-import com.inepex.thrift.ResourceCreationException;
-import static com.inepex.hyperconnector.dao.HyperOperationException.*;
 
 public class HyperDaoHelper {
 	
@@ -32,8 +35,6 @@ public class HyperDaoHelper {
 			return client.hql_query(nsid, hqlQuery);
 		} catch (InterruptedException e) {
 			throw new HyperOperationException(hyperOperationFailed_Interrupted, e);
-		} catch (ResourceCreationException e) {
-			throw new HyperOperationException(hyperOperationFailed_ResourceCreation, e);
 		} catch (ClientException e) {
 			throw new HyperOperationException(hyperOperationFailed_ClientException, e);
 		} catch (TException e) {

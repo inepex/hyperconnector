@@ -17,6 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xerial.snappy.SnappyOutputStream;
 
+import com.inepex.hyperconnector.ApplicationDelegate;
+
 public class HyperDumpFileProvider {
 	
 	public final static String EXTRADELEXTENSION = ".del";
@@ -36,7 +38,7 @@ public class HyperDumpFileProvider {
 	private final String baseDumpFolder;
 	
 	public HyperDumpFileProvider(NowProvider nowProvider,
-			HyperDumperDelegate delegate,
+			ApplicationDelegate delegate,
 			String baseDumpFolder) {
 		this.nowProvider=nowProvider;
 		this.baseDumpFolder=baseDumpFolder;
@@ -157,7 +159,7 @@ public class HyperDumpFileProvider {
 			TIOStreamTransport fileTransport = new TIOStreamTransport(snStream);
 			TBinaryProtocol prot = new TBinaryProtocol(fileTransport);
 			fileTransport.open();
-			return new OpenedStreams(file, prot, snStream, fos);
+			return new OpenedStreams(file, prot, snStream);
 			
 		} catch (TTransportException e) {
 			_logger.error(e.getMessage(), e);
@@ -224,12 +226,10 @@ public class HyperDumpFileProvider {
 		final File file;
 		final TBinaryProtocol binaryProtocol;
 		final SnappyOutputStream snStream;
-		final FileOutputStream fos;
 		
-		public OpenedStreams(File file, TBinaryProtocol binaryProtocol, SnappyOutputStream snStream, FileOutputStream fos) {
+		public OpenedStreams(File file, TBinaryProtocol binaryProtocol, SnappyOutputStream snStream) {
 			this.binaryProtocol = binaryProtocol;
 			this.snStream=snStream;
-			this.fos = fos;
 			this.file=file;
 		}
 	}
