@@ -5,7 +5,7 @@
 
 	<groupId>com.inepex</groupId>
 	<artifactId>hyperconnector</artifactId>
-	<version>0.9.5.9</version>
+	<version>0.9.5.91</version>
 	<packaging>jar</packaging>
 
 	<name>hyperconnector</name>
@@ -34,8 +34,8 @@
 	          <artifactId>maven-compiler-plugin</artifactId>
 	          <version>3.0</version>
 	          <configuration>
-	            <source>1.5</source>
-	            <target>1.5</target>
+	            <source>1.7</source>
+	            <target>1.7</target>
 	            <encoding>UTF-8</encoding>
 	            <fork>true</fork>
 	            <meminitial>128m</meminitial>
@@ -60,6 +60,12 @@
 		  <groupId>org.xerial.snappy</groupId>
 		  <artifactId>snappy-java</artifactId>
 		  <version>1.0.5-M3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>1.9.0</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

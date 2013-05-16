@@ -10,6 +10,8 @@ import org.hypertable.thriftgen.KeyFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.inepex.hyperconnector.ApplicationDelegate;
+
 public class HyperDumper {
 	
 	private final static Logger _logger = LoggerFactory.getLogger(HyperDumper.class);
@@ -17,7 +19,7 @@ public class HyperDumper {
 	final HyperDumpFileProvider fileProvider;
 	
 	public HyperDumper(NowProvider nowProvider,
-			HyperDumperDelegate delegate,
+			ApplicationDelegate delegate,
 			String baseDumpFolder) {
 		this.fileProvider=new HyperDumpFileProvider(nowProvider, delegate, baseDumpFolder);
 	}

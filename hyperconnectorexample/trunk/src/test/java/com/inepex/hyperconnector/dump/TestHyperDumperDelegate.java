@@ -2,7 +2,9 @@ package com.inepex.hyperconnector.dump;
 
 import java.util.concurrent.TimeUnit;
 
-public class TestHyperDumperDelegate implements HyperDumperDelegate {
+import com.inepex.hyperconnector.ApplicationDelegate;
+
+public class TestHyperDumperDelegate implements ApplicationDelegate {
 
 	private Runnable shutDownTask;
 	

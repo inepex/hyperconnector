@@ -34,8 +34,7 @@ public abstract class ResourcePool<T> {
 	}
 
 	
-	public T getResource(long maxWaitMillis, int tryGetCount, int tryCreateCount) throws InterruptedException,
-			ResourceCreationException {
+	public T getResource(long maxWaitMillis, int tryGetCount, int tryCreateCount) throws InterruptedException {
 		// validate input
 		if (tryCreateCount < 1)
 			tryCreateCount = 1;

@@ -16,6 +16,8 @@ import org.hypertable.thriftgen.Key;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import com.inepex.hyperconnector.ApplicationDelegate;
+
 public class HyperDumpFileProviderTest {
 	
 	@Test
@@ -28,7 +30,7 @@ public class HyperDumpFileProviderTest {
 		
 		HyperDumpFileProvider prov = new HyperDumpFileProvider(
 				nowProvider,
-				Mockito.mock(HyperDumperDelegate.class),
+				Mockito.mock(ApplicationDelegate.class),
 				"test_dump");
 
 		//cleanup
@@ -69,7 +71,7 @@ public class HyperDumpFileProviderTest {
 		
 		HyperDumpFileProvider prov = new HyperDumpFileProvider(
 				nowProvider,
-				Mockito.mock(HyperDumperDelegate.class),
+				Mockito.mock(ApplicationDelegate.class),
 				"test_dump");
 		
 		Calendar startTime = Calendar.getInstance();
@@ -92,7 +94,7 @@ public class HyperDumpFileProviderTest {
 		
 		HyperDumpFileProvider prov = new HyperDumpFileProvider(
 				nowProvider,
-				Mockito.mock(HyperDumperDelegate.class),
+				Mockito.mock(ApplicationDelegate.class),
 				"test_dump");
 		String path1 = prov.getBaseDumpFolder()+"/NameSpace/Table/1999-12/20/21_UTC.dump.snappy";
 		String path2 = prov.getDumpFileName(cal.getTimeInMillis(), "NameSpace", "Table", false);
@@ -112,7 +114,7 @@ public class HyperDumpFileProviderTest {
 		
 		HyperDumpFileProvider prov = new HyperDumpFileProvider(
 				nowProv,
-				Mockito.mock(HyperDumperDelegate.class),
+				Mockito.mock(ApplicationDelegate.class),
 				"test_dump");
 		String namespace="namespace";
 		String tableName="tablename";
@@ -150,7 +152,7 @@ public class HyperDumpFileProviderTest {
 		
 		HyperDumpFileProvider prov = new HyperDumpFileProvider(
 				nowProv,
-				Mockito.mock(HyperDumperDelegate.class),
+				Mockito.mock(ApplicationDelegate.class),
 				"test_dump");
 		String namespace="namespace";
 		String tableName="tablename";

@@ -8,7 +8,6 @@ public class HyperOperationException extends Exception {
 	public static final String hyperClientPoolNull = "HyperDaoBase error: hyperPoolArgs.getHyperClientPool() returned null.";
 	public static final String hyperHqlServicePoolNull = "HyperDaoBase error: hyperPoolArgs.getHyperHqlServicePool() returned null.";
 	public static final String hyperOperationFailed = "Hypertable operation failed.";
-	public static final String hyperOperationFailed_ResourceCreation = "Hypertable operation failed: resource creation error.";
 	public static final String hyperOperationFailed_ClientException = "Hypertable operation failed: ClientException.";
 	public static final String hyperOperationFailed_ThriftCommError = "Hypertable operation failed: Thrift communication error.";
 	public static final String hyperOperationFailed_Interrupted = "Hypertable operation failed: interrupted.";
