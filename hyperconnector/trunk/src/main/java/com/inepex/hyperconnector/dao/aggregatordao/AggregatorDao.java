@@ -22,6 +22,7 @@ public class AggregatorDao implements BottomLevelDao{
 
 	
 	private final BottomLevelDao bottomLevelDao;
+	private final ApplicationDelegate applicationDelegate;
 	private final ConcurrentLinkedQueue<List<Cell>> inserts = new ConcurrentLinkedQueue<>();
 	
 	public AggregatorDao(BottomLevelDao bottomLevelDao, ApplicationDelegate applicationDelegate) {
@@ -30,18 +31,14 @@ public class AggregatorDao implements BottomLevelDao{
 	
 	AggregatorDao(BottomLevelDao bottomLevelDao, ApplicationDelegate applicationDelegate, boolean isTestDao, long periodMS) {
 		this.bottomLevelDao=bottomLevelDao;
+		this.applicationDelegate=applicationDelegate;
 		
 		if(!isTestDao) {
-			AggregatorDaoPool.getService().scheduleWithFixedDelay(new Runnable() {
+			AggregatorDaoThreadPool.getExecutorService().scheduleWithFixedDelay(new Runnable() {
 				
 				@Override
 				public void run() {
-					try {
 					flushInserts();
-					} catch (Exception e) {
-						_logger.error("", e);
-					}
-					
 				}
 			}, periodMS, periodMS, TimeUnit.MILLISECONDS);
 			
@@ -56,24 +53,34 @@ public class AggregatorDao implements BottomLevelDao{
 	}
 	
 	void flushInserts() {
-		List<Cell> realInserts = new ArrayList<>();
-		while(true) {
-			List<Cell> next = inserts.poll();
-			if(next==null)
-				break;
+		try {
+			Long startMs = System.currentTimeMillis();
 			
-			realInserts.addAll(next);
-		}
-		
-		if(!realInserts.isEmpty()) {
-			try {
-				bottomLevelDao.insert(realInserts);
-			} catch (HyperOperationException e) {
-				inserts.add(realInserts);
-				throw new RuntimeException(e);
+			List<Cell> realInserts = new ArrayList<>();
+			while(true) {
+				List<Cell> next = inserts.poll();
+				if(next==null)
+					break;
+				
+				realInserts.addAll(next);
 			}
+			
+			if(!realInserts.isEmpty()) {
+				try {
+					bottomLevelDao.insert(realInserts);
+				} catch (HyperOperationException e) {
+					inserts.add(realInserts);
+					throw new RuntimeException(e);
+				}
+				
+				if(applicationDelegate!=null)
+					applicationDelegate.logInserting(realInserts.size(), System.currentTimeMillis()-startMs);
+			}
+			
+		} catch (Exception e) {
+			_logger.error("", e);
 		}
-	}
+	}	
 
 	@Override
 	public void insert(List<Cell> cells) throws HyperOperationException {
