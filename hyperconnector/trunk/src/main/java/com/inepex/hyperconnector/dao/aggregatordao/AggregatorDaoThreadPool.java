@@ -5,20 +5,20 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
-class AggregatorDaoPool {
+class AggregatorDaoThreadPool {
 
-	private static final int poolStartSize = 4;
+	private static final int poolSize = 4;
 	
 	private static final Object lock = new Object();
 	private static ScheduledExecutorService service;
 	
-	public static ScheduledExecutorService getService() {
+	public static ScheduledExecutorService getExecutorService() {
 		if(service!=null)
 			return service;
 		
 		synchronized (lock) {
 			if(service==null) {
-				service = Executors.newScheduledThreadPool(poolStartSize, new ThreadFactory() {
+				service = Executors.newScheduledThreadPool(poolSize, new ThreadFactory() {
 					
 					private final AtomicInteger counter = new AtomicInteger();
 					

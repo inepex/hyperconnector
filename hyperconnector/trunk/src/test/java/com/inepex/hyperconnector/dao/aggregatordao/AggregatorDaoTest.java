@@ -32,9 +32,9 @@ public class AggregatorDaoTest {
 	
 	@Test
 	public void poolTest() throws InterruptedException {
-		assertNotNull(AggregatorDaoPool.getService());
+		assertNotNull(AggregatorDaoThreadPool.getExecutorService());
 		Runnable mock = mock(Runnable.class);
-		AggregatorDaoPool.getService().scheduleAtFixedRate(mock, 5, 5, TimeUnit.MILLISECONDS);
+		AggregatorDaoThreadPool.getExecutorService().scheduleAtFixedRate(mock, 5, 5, TimeUnit.MILLISECONDS);
 		
 		Thread.sleep(30);
 		verify(mock, atLeast(6)).run();

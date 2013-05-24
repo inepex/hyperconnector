@@ -14,11 +14,14 @@ public class TestHyperDumperDelegate implements ApplicationDelegate {
 	}
 
 	@Override
-	public void scheduleAtFixedRate(Runnable task, long initialDelay,
-			long period, TimeUnit unit) {
+	public void scheduleAtFixedRate(Runnable task, long initialDelay,long period, TimeUnit unit) {
 	}
 	
 	public void doShutDown(){
 		shutDownTask.run();
+	}
+
+	@Override
+	public void logInserting(int cellCount, long timeSpentInMs) {
 	}
 }
