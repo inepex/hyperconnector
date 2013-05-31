@@ -62,7 +62,7 @@
 		<dependency>
 			<groupId>com.inepex</groupId>
 			<artifactId>hyperconnector</artifactId>
-			<version>0.9.5.92</version>
+			<version>0.9.5.93</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
