@@ -18,7 +18,7 @@ public class HyperDao<T> {
 	private static final byte[] deletedCellValue = new byte[0];
 	
 	private final BottomLevelDao bottomDao;
-	private final HyperMapperBase<T> mapper;
+	protected final HyperMapperBase<T> mapper;
 	
 	public HyperDao(BottomLevelDao bottomDao, HyperMapperBase<T> mapper) {
 		this.bottomDao=bottomDao;
