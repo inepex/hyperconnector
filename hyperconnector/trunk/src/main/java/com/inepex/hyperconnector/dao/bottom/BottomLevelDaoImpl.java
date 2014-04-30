@@ -133,4 +133,10 @@ public class BottomLevelDaoImpl implements BottomLevelDao {
 			hyperClientPool.returnResource(hyperConn);
 		}
 	}
+
+	@Override
+	public void insert(List<Cell> cells, Runnable cbk) throws HyperOperationException {
+		insert(cells);
+		cbk.run();
+	}
 }

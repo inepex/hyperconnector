@@ -40,4 +40,10 @@ public class DumpedDao implements BottomLevelDao{
 		return bottomLevelDao.getTableName();
 	}
 
+	@Override
+	public void insert(List<Cell> cells, Runnable cbk) throws HyperOperationException {
+		hyperDumper.dumpCells(cells, bottomLevelDao.getNamespace(), bottomLevelDao.getTableName());
+		bottomLevelDao.insert(cells, cbk);
+	}
+
 }

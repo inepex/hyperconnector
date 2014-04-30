@@ -2,6 +2,7 @@ package com.inepex.hyperconnector.dao.aggregatordao;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.atLeastOnce;
@@ -36,7 +37,7 @@ public class AggregatorDaoTest {
 		Runnable mock = mock(Runnable.class);
 		AggregatorDaoThreadPool.getExecutorService().scheduleAtFixedRate(mock, 5, 5, TimeUnit.MILLISECONDS);
 		
-		Thread.sleep(30);
+		Thread.sleep(31);
 		verify(mock, atLeast(6)).run();
 	}
 
@@ -51,7 +52,7 @@ public class AggregatorDaoTest {
 				result.addAndGet(((Collection<?>)invocation.getArguments()[0]).size());
 				return null;
 			}
-		}).when(bottomMock).insert(anyListOf(Cell.class));
+		}).when(bottomMock).insert(anyListOf(Cell.class), any(Runnable.class));
 		
 		AggregatorDao dao = new AggregatorDao(bottomMock, mock(ApplicationDelegate.class), false, 50);
 		dao.insert(threeCells());
@@ -63,7 +64,7 @@ public class AggregatorDaoTest {
 		Thread.sleep(70);
 		
 		
-		verify(bottomMock, atLeastOnce()).insert(anyListOf(Cell.class));
+		verify(bottomMock, atLeastOnce()).insert(anyListOf(Cell.class), any(Runnable.class));
 		verifyNoMoreInteractions(bottomMock);
 		assertEquals(12, result.get());
 	}
@@ -88,7 +89,7 @@ public class AggregatorDaoTest {
 		verifyZeroInteractions(bottomMock);
 		
 		dao.flushInserts();
-		verify(bottomMock, times(1)).insert(anyListOf(Cell.class));
+		verify(bottomMock, times(1)).insert(anyListOf(Cell.class), any(Runnable.class));
 		verifyNoMoreInteractions(bottomMock);
 		
 		dao.flushInserts();
