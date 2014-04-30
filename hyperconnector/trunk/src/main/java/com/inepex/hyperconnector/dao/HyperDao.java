@@ -30,9 +30,19 @@ public class HyperDao<T> {
 			bottomDao.insert(Arrays.asList(cell));
 	}
 	
+	protected final void insert(Cell cell, Runnable cbk) throws HyperOperationException {
+		if (cell != null)
+			bottomDao.insert(Arrays.asList(cell), cbk);
+	}
+	
 	protected final void insert(List<Cell> cells) throws HyperOperationException {
 		if (cells != null)
 			bottomDao.insert(cells);
+	}
+	
+	protected final void insert(List<Cell> cells, Runnable cbk) throws HyperOperationException {
+		if (cells != null)
+			bottomDao.insert(cells, cbk);
 	}
 
 	protected final void delete(ScanSpec ss) throws HyperOperationException {
@@ -64,9 +74,20 @@ public class HyperDao<T> {
 		else
 			bottomDao.insert(mapper.hyperEntityToCellList(hyperEntity));
 	}
+	
+	public final void insert(T hyperEntity, Runnable cbk) throws HyperOperationException, HyperMappingException {
+		if(mapper.getIsSingleCell())
+			insert(mapper.hyperEntityToCell(hyperEntity), cbk);
+		else
+			bottomDao.insert(mapper.hyperEntityToCellList(hyperEntity), cbk);
+	}
 
 	public final void insertList(List<T> hyperEntityList) throws HyperOperationException {
 		bottomDao.insert(mapper.hyperEntityListToCellList(hyperEntityList));
+	}
+	
+	public final void insertList(List<T> hyperEntityList, Runnable cbk) throws HyperOperationException {
+		bottomDao.insert(mapper.hyperEntityListToCellList(hyperEntityList), cbk);
 	}
 	
 	public final List<T> select(ScanSpec ss) throws HyperOperationException {

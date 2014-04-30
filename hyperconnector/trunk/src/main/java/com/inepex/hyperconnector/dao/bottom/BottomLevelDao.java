@@ -11,6 +11,7 @@ public interface BottomLevelDao {
 	
 	List<Cell> select(ScanSpec ss) throws HyperOperationException;
 	void insert(List<Cell> cells) throws HyperOperationException;
+	void insert(List<Cell> cells, Runnable cbk) throws HyperOperationException;
 	String getNamespace();
 	String getTableName();
 }

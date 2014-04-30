@@ -23,7 +23,7 @@ public class AggregatorDao implements BottomLevelDao{
 	
 	private final BottomLevelDao bottomLevelDao;
 	private final ApplicationDelegate applicationDelegate;
-	private final ConcurrentLinkedQueue<List<Cell>> inserts = new ConcurrentLinkedQueue<>();
+	private final ConcurrentLinkedQueue<ThriftCellInsertRequest> inserts = new ConcurrentLinkedQueue<>();
 	
 	public AggregatorDao(BottomLevelDao bottomLevelDao, ApplicationDelegate applicationDelegate) {
 		this(bottomLevelDao, applicationDelegate, false, defaultPeriodMS);
@@ -57,19 +57,28 @@ public class AggregatorDao implements BottomLevelDao{
 			Long startMs = System.currentTimeMillis();
 			
 			List<Cell> realInserts = new ArrayList<>();
+			final List<ThriftCellInsertRequest> requests = new ArrayList<>();
 			while(true) {
-				List<Cell> next = inserts.poll();
+				ThriftCellInsertRequest next = inserts.poll();
 				if(next==null)
 					break;
 				
-				realInserts.addAll(next);
+				realInserts.addAll(next.getCells());
+				requests.add(next);
 			}
 			
 			if(!realInserts.isEmpty()) {
 				try {
-					bottomLevelDao.insert(realInserts);
+					bottomLevelDao.insert(realInserts, new Runnable() {
+						
+						@Override
+						public void run() {
+							submitCallbacks(requests);
+						}
+					});
+					
 				} catch (HyperOperationException e) {
-					inserts.add(realInserts);
+					inserts.addAll(requests);
 					throw new RuntimeException(e);
 				}
 				
@@ -82,10 +91,24 @@ public class AggregatorDao implements BottomLevelDao{
 		}
 	}	
 
+	private void submitCallbacks(List<ThriftCellInsertRequest> requests) {
+		for(ThriftCellInsertRequest request : requests){
+			if(request.getCallback() != null){
+				applicationDelegate.submit(request.getCallback());
+			}
+		}
+	}
+
 	@Override
 	public void insert(List<Cell> cells) throws HyperOperationException {
 		if(cells!=null && !cells.isEmpty())
-			inserts.add(cells);
+			inserts.add(new ThriftCellInsertRequest(cells));
+	}
+	
+	@Override
+	public void insert(List<Cell> cells, Runnable callback) throws HyperOperationException {
+		if(cells!=null && !cells.isEmpty())
+			inserts.add(new ThriftCellInsertRequest(cells, callback));
 	}
 	
 	@Override
@@ -102,5 +125,4 @@ public class AggregatorDao implements BottomLevelDao{
 	public String getTableName() {
 		return bottomLevelDao.getTableName();
 	}
-
 }
