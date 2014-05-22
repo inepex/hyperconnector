@@ -137,6 +137,8 @@ public class BottomLevelDaoImpl implements BottomLevelDao {
 	@Override
 	public void insert(List<Cell> cells, Runnable cbk) throws HyperOperationException {
 		insert(cells);
-		cbk.run();
+		if(cbk != null){
+			cbk.run();
+		}
 	}
 }
