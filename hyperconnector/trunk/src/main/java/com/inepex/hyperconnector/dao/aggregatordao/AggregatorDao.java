@@ -107,8 +107,11 @@ public class AggregatorDao implements BottomLevelDao{
 	
 	@Override
 	public void insert(List<Cell> cells, Runnable callback) throws HyperOperationException {
-		if(cells!=null && !cells.isEmpty())
+		if(cells!=null && !cells.isEmpty()){
 			inserts.add(new ThriftCellInsertRequest(cells, callback));
+		}else{
+			callback.run();
+		}
 	}
 	
 	@Override

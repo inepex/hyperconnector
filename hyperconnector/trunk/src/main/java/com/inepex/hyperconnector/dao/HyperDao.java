@@ -45,20 +45,27 @@ public class HyperDao<T> {
 			bottomDao.insert(cells, cbk);
 	}
 
-	protected final void delete(ScanSpec ss) throws HyperOperationException {
+	protected final void delete(ScanSpec ss, Runnable cbk) throws HyperOperationException {
 		List<Cell> cells = bottomDao.select(ss);
 		if (cells != null) {
-			for (Cell cell : cells)
+			for (Cell cell : cells){
 				if (cell != null && cell.getKey() != null) {
 					cell.getKey().setFlag(KeyFlag.DELETE_CELL_VERSION);
 					cell.setValue(deletedCellValue);
 				}
-			bottomDao.insert(cells);
+			}
+			bottomDao.insert(cells, cbk);
+		}else if(cbk != null){
+			cbk.run();
 		}
 	}
 	
+	public final void deleteAll(Runnable cbk) throws HyperOperationException {
+		delete(getScanSpec_All(), cbk);
+	}
+	
 	public final void deleteAll() throws HyperOperationException {
-		delete(getScanSpec_All());
+		delete(getScanSpec_All(), null);
 	}
 	
 	protected final ScanSpec getScanSpec_All() {
