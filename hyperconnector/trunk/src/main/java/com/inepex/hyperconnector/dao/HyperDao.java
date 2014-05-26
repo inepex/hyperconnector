@@ -54,7 +54,11 @@ public class HyperDao<T> {
 					cell.setValue(deletedCellValue);
 				}
 			}
-			bottomDao.insert(cells, cbk);
+			if(cbk != null){
+				bottomDao.insert(cells, cbk);
+			}else{
+				bottomDao.insert(cells);
+			}
 		}else if(cbk != null){
 			cbk.run();
 		}
