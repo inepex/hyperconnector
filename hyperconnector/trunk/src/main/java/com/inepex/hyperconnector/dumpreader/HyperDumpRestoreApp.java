@@ -76,8 +76,8 @@ public class HyperDumpRestoreApp {
 	}
 
 	private static void createHyperResources() {
-		HyperClientPool hyperClientPool = new HyperClientPool("localhost", 38080);
-		HyperHqlServicePool hyperHqlServicePool = new HyperHqlServicePool("localhost", 38080);
+		HyperClientPool hyperClientPool = new HyperClientPool(hyperAddress, hyperPort);
+		HyperHqlServicePool hyperHqlServicePool = new HyperHqlServicePool(hyperAddress, hyperPort);
 		
 		hyperPoolArgs = new HyperPoolArgs(hyperClientPool, 
 				hyperHqlServicePool, 
@@ -113,9 +113,9 @@ public class HyperDumpRestoreApp {
 				"\n" +
 				
 				"minimal params to invoke :\n" +
-				"\tHyperDumpRestoreApp hyperAddress=beta-app.inetrack.com hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report\n\n"+
+				"\tHyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report\n\n"+
 				"sample invoke :\n" +
-				"\tHyperDumpRestoreApp hyperAddress=beta-app.inetrack.com hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 day=12-25 content=BOTH\n"
+				"\tHyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 day=12-25 content=BOTH\n"
 		);
 	}
 	
