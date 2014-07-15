@@ -5,7 +5,11 @@ import com.inepex.hyperconnector.thrift.HyperHqlServicePool;
 import com.inepex.hyperconnector.thrift.HyperPoolArgs;
 
 /**
- * By running this test use your own hypertable or hypertable of beta-app. Before run, make a namespace called "DumpRestoreIntegrityTest".
+ * By running this test use your own hypertable or hypertable of a test server.
+ * 
+ * Before you run, make a namespace called "DumpRestoreIntegrityTest".
+ * 
+ * It takes SEVERAL MINUTES depending on the speed of the network connection between your PC and hypertable.
  * 
  * @author sebi
  */

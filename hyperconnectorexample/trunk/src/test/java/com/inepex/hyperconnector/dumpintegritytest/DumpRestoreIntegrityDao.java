@@ -83,8 +83,8 @@ public class DumpRestoreIntegrityDao {
 		
 		insertDao.deleteByServerTimestampRange("s2.com", Long.MIN_VALUE, Long.MAX_VALUE);
 		
-		List<Ticket> reports2 = new ArrayList<Ticket>(12);
-		for(int i=0; i<12; i++)
+		List<Ticket> reports2 = new ArrayList<Ticket>(39999);
+		for(int i=0; i<39999; i++)
 			reports2.add(createTestTicket("s2.com", nowProvider.nowPlusPlus()));
 		
 		insertDao.insertList(reports2);
@@ -139,7 +139,7 @@ public class DumpRestoreIntegrityDao {
 	
 	public void makeSecondDaySnapshot(String name) throws Exception {
 		long secDayCreationTimeStamp = timeOfDay(secondDay);
-		List<Cell> secondDayCells = restoreDao.selectAsCell(getScanSpec_ByServerTimestampRange("s1.com", "s9.com", secDayCreationTimeStamp, secDayCreationTimeStamp+1000));
+		List<Cell> secondDayCells = restoreDao.selectAsCell(getScanSpec_ByServerTimestampRange("s1.com", "s9.com", secDayCreationTimeStamp, secDayCreationTimeStamp+60_000));
 		snaps.storeSnapshot(name, secondDayCells);
 	}
 	
@@ -151,7 +151,7 @@ public class DumpRestoreIntegrityDao {
 		}
 
 		public void deleteByServerTimestampRange(String server, long minValue, long maxValue) throws HyperOperationException {
-			delete(getScanSpec_ByServerTimestampRange(server, server, minValue, maxValue));
+			delete(getScanSpec_ByServerTimestampRange(server, server, minValue, maxValue), null);
 		}
 	}
 	

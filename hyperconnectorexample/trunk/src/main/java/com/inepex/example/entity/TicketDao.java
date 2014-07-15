@@ -70,7 +70,7 @@ public class TicketDao extends HyperDao<Ticket> {
 	}
 	
 	public void deleteByServerTimestampRange(String server, long timestamp_start, long timestamp_end) throws HyperOperationException {
-		delete(getScanSpec_ByServerTimestampRange(server, timestamp_start, timestamp_end));
+		delete(getScanSpec_ByServerTimestampRange(server, timestamp_start, timestamp_end), null);
 	}
 
 }

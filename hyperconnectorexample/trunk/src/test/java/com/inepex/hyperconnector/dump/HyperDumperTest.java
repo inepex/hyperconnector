@@ -4,6 +4,7 @@ import static com.inepex.hyperconnector.dump.HyperDumperTestShared.deleteDir;
 import static com.inepex.hyperconnector.dump.HyperDumperTestShared.getTestTicket;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.LinkedList;
@@ -16,14 +17,58 @@ import org.junit.Test;
 
 import com.inepex.example.entity.Ticket;
 import com.inepex.example.entity.TicketMapper;
-import com.inepex.hyperconnector.dumpreader.HyperDumpReader;
+import com.inepex.hyperconnector.dumpreader.HyperDumpFiles;
+import com.inepex.hyperconnector.dumpreader.HyperDumpReaderBufferedCellStream;
 import com.inepex.hyperconnector.dumpreader.HyperDumpReaderFilter;
-import com.inepex.hyperconnector.dumpreader.HyperDumpReader.FileContent;
+import com.inepex.hyperconnector.dumpreader.HyperDumpReaderBufferedCellStream.BufferedCellStreamException;
 import com.inepex.hyperconnector.mapper.HyperMappingException;
 
 public class HyperDumperTest {
 	
 	private static final TicketMapper mapper = new TicketMapper();
+	
+	@Test
+	public void testBrokenFiles() throws Exception {
+		String dumpFolder = "testBrokenFiles_dump";
+		deleteDir(new File(dumpFolder));
+		
+		TestNowProvider nowProv = new TestNowProvider();
+		Calendar cal = Calendar.getInstance();
+		cal.setTimeZone(HyperDumpFileProvider.UTC);
+		cal.set(1999, 11, 20, 21, 19);
+		nowProv.setNow(cal.getTimeInMillis());
+		
+		for(int i=0; i<3; i++){
+			//'starting' it again
+			TestHyperDumperDelegate delegate = new TestHyperDumperDelegate();
+			HyperDumper hd = new HyperDumper(
+					nowProv,
+					delegate,
+					dumpFolder);
+			dumpTicket(hd, getTestTicket());
+			delegate.doShutDown();
+			
+			//module 'stopped'
+			nowProv.setNow(nowProv.now()+1000);
+		}
+		
+		//append dummy bytes
+		for(File dumpFile : HyperDumpFiles.collectMatchingFiles(dumpFolder, new HyperDumpReaderFilter()
+			.nameSpace("InepexNs")
+			.table("Report"))) {
+			try (FileWriter fw = new FileWriter(dumpFile, true)) {
+				fw.append('f');
+				fw.append('g');
+				fw.append('h');
+				fw.append('2');
+			}
+		}
+		
+		List<Ticket> readTickets = readAllTicketsFromDumpWithSilentExceptions(dumpFolder);
+		Assert.assertEquals(3, readTickets.size());
+		
+		Assert.assertTrue(deleteDir(new File(dumpFolder)));
+	}
 	
 	@Test
 	public void testShutdownRestart() throws Exception {
@@ -46,7 +91,7 @@ public class HyperDumperTest {
 			nowProv.setNow(nowProv.now()+1000);
 		}
 		
-		List<Ticket> redReports = readAllTicketsFromDump(dumpFolder);
+		List<Ticket> redReports = readAllTicketsFromDumpWithSilentExceptions(dumpFolder);
 		Assert.assertEquals(3, redReports.size());
 		
 		Assert.assertTrue(deleteDir(new File(dumpFolder)));
@@ -58,7 +103,9 @@ public class HyperDumperTest {
 		HyperDumper hd = new HyperDumper(
 				tnp,
 				new TestHyperDumperDelegate(),
-				"test_dump_folder");
+				"testDumpCell_folder");
+		
+		deleteDir(new File(hd.fileProvider.getBaseDumpFolder()));
 
 		Ticket ticket = getTestTicket();
 		dumpTicket(hd, ticket);
@@ -67,7 +114,7 @@ public class HyperDumperTest {
 		tnp.setOneHourLater();
 		hd.fileProvider.closeOldFiles();
 		
-		List<Ticket> redTickets = readAllTicketsFromDump(hd.fileProvider.getBaseDumpFolder());
+		List<Ticket> redTickets = readAllTicketsFromDumpWithSilentExceptions(hd.fileProvider.getBaseDumpFolder());
 		Assert.assertEquals(1, redTickets.size());
 		Ticket redTicket = redTickets.get(0);
 		Assert.assertEquals(ticket, redTicket);
@@ -81,21 +128,33 @@ public class HyperDumperTest {
 		hd.dumpCells(cells, "InepexNs", "Report");
 	}
 	
-	private List<Ticket> readAllTicketsFromDump(String baseFolder) throws Exception {
-		HyperDumpReader hdr = new HyperDumpReader(baseFolder,
-				new HyperDumpReaderFilter()
-					.nameSpace("InepexNs")
-					.table("Report"));
-		
-		List<Ticket> reports = new LinkedList<Ticket>();
-		for(FileContent fc : hdr) {
-			if(fc.hasException())
-				throw fc.getReadException();
+	private List<Ticket> readAllTicketsFromDumpWithSilentExceptions(String baseFolder) throws Exception {
+		List<Ticket> tickets = new LinkedList<Ticket>();
+		for(File dumpFile : HyperDumpFiles.collectMatchingFiles(baseFolder, new HyperDumpReaderFilter()
+										.nameSpace("InepexNs")
+										.table("Report"))) {
+			HyperDumpReaderBufferedCellStream stream = new HyperDumpReaderBufferedCellStream(dumpFile);
+			stream.open();
 			
-			reports.addAll(mapper.cellListToHyperEntityList(fc.getContent()));
+			List<Cell> cells;
+			while(true) {
+				try {
+					cells=stream.readCells();
+					if(cells.isEmpty()) {
+						break;
+					}
+					
+					tickets.addAll(mapper.cellListToHyperEntityList(cells));
+				} catch (BufferedCellStreamException e) {
+					tickets.addAll(mapper.cellListToHyperEntityList(e.getAlreadydecodedCells()));
+					break;
+				}
+			}
+			
+			stream.close();
 		}
 		
-		return reports;
+		return tickets;
 	}
 	
 	@Test
@@ -104,7 +163,8 @@ public class HyperDumperTest {
 		HyperDumper hd = new HyperDumper(
 				nowProv,
 				new TestHyperDumperDelegate(),
-				"test_dump_folder");
+				"testLongTimeWriting_folder");
+		deleteDir(new File(hd.fileProvider.getBaseDumpFolder()));
 		
 		Calendar c = Calendar.getInstance();
 		c.set(2011, 10, 11, 11, 11);
@@ -131,7 +191,7 @@ public class HyperDumperTest {
 		nowProv.setOneHourLater();
 		hd.fileProvider.closeOldFiles();
 		
-		List<Ticket> redReports = readAllTicketsFromDump(hd.fileProvider.getBaseDumpFolder());
+		List<Ticket> redReports = readAllTicketsFromDumpWithSilentExceptions(hd.fileProvider.getBaseDumpFolder());
 		
 		Assert.assertEquals(5, redReports.size());
 		
