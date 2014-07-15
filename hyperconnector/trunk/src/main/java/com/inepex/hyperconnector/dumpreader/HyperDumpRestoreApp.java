@@ -1,13 +1,22 @@
 package com.inepex.hyperconnector.dumpreader;
 
+import java.io.File;
+import java.util.List;
+
+import org.hypertable.thriftgen.Cell;
+
 import com.inepex.hyperconnector.dao.HyperOperationException;
 import com.inepex.hyperconnector.dao.bottom.BottomLevelDaoImpl;
-import com.inepex.hyperconnector.dumpreader.HyperDumpReader.FileContent;
+import com.inepex.hyperconnector.dump.HyperDumper;
+import com.inepex.hyperconnector.dumpreader.HyperDumpReaderBufferedCellStream.BufferedCellStreamException;
 import com.inepex.hyperconnector.thrift.HyperClientPool;
 import com.inepex.hyperconnector.thrift.HyperHqlServicePool;
 import com.inepex.hyperconnector.thrift.HyperPoolArgs;
 
 
+/**
+ * Application for restore the files of {@link HyperDumper}. Run the application with "help" parameter for more details.
+ */
 public class HyperDumpRestoreApp {
 
 	//temporaly stored
@@ -29,6 +38,7 @@ public class HyperDumpRestoreApp {
 	private static BottomLevelDaoImpl daoImpl;
 	
 	public static void main(String[] args) {
+		System.out.println(HyperDumpRestoreApp.class.getSimpleName()+": big file optimized version July/2014");
 		if(args==null || args.length==0) {
 			printHelp();
 			System.exit(-1);
@@ -49,15 +59,48 @@ public class HyperDumpRestoreApp {
 		System.out.println("Inserting cells...");
 		long cellInsertedSum=0;
 		try {
-			for(FileContent fc : new HyperDumpReader(baseFolder, filter)) {
-				System.out.print(fc.getPath()+": "+fc.getContent().size()+" cell in it.... ");
-				cellInsertedSum+=fc.getContent().size();
-				daoImpl.insert(fc.getContent());
-				if(!fc.hasException())
+			for(File dumpFile : HyperDumpFiles.collectMatchingFiles(baseFolder, filter)) {
+				long cellCountInfile = 0;
+				HyperDumpReaderBufferedCellStream stream = new HyperDumpReaderBufferedCellStream(dumpFile);
+				Exception readException = null;
+				
+				try {
+					stream.open();
+					
+					List<Cell> cells;
+					while(true) {
+						cells=stream.readCells();
+						if(cells.isEmpty()) {
+							break;
+						}
+						
+						cellCountInfile+=cells.size();
+						
+						daoImpl.insert(cells);
+					}
+				} catch (BufferedCellStreamException e) {
+					if(!e.getAlreadydecodedCells().isEmpty()) {
+						cellCountInfile+=e.getAlreadydecodedCells().size();
+						daoImpl.insert(e.getAlreadydecodedCells());
+					}
+					
+					readException=e;
+					stream.close();
+				} catch (HyperOperationException e) {
+					throw e;
+				} catch (Exception e) {
+					readException=e;
+					stream.close();
+				}
+				
+				System.out.print(dumpFile.getPath()+": "+cellCountInfile+" cell in it.... ");
+				cellInsertedSum+=cellCountInfile;
+				
+				if(readException==null)
 					System.out.println("  Ok!");
 				else {
 					System.out.println(" Corrupt file:");
-					fc.getReadException().printStackTrace(System.out);
+					readException.printStackTrace();
 				}
 			}
 			
@@ -65,12 +108,12 @@ public class HyperDumpRestoreApp {
 		} catch (HyperOperationException ex) {
 			ex.printStackTrace();
 		} finally {
-			closeConnections();
+			closeHyperConnections();
 		}
 		
 	}
 	
-	private static void closeConnections() {
+	private static void closeHyperConnections() {
 		hyperPoolArgs.getHyperHqlServicePool().destroyAllResource();
 		hyperPoolArgs.getHyperClientPool().destroyAllResource();
 	}

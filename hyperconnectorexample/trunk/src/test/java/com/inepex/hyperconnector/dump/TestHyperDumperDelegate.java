@@ -1,5 +1,6 @@
 package com.inepex.hyperconnector.dump;
 
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import com.inepex.hyperconnector.ApplicationDelegate;
@@ -23,5 +24,10 @@ public class TestHyperDumperDelegate implements ApplicationDelegate {
 
 	@Override
 	public void logInserting(int cellCount, long timeSpentInMs) {
+	}
+
+	@Override
+	public Future<?> submit(Runnable runnable) {
+		throw new UnsupportedOperationException();
 	}
 }
