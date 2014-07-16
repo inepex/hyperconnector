@@ -71,8 +71,32 @@ HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hy
 # HyperDumper doesn't support the separated dumping of modifications, so you are not able to do it like deletions
 # There is no solution for this problem in this app right now
 
-= Non-in-creation-order restore =
-In case you have a *huge amount of dump files* and want to restore the *last one week*, and after the others:
+= Non-in-creation-order restore (no deletions)=
+In case you have a *huge amount of dump files* and want to restore the *last one week*, and after the others, while users can access the data!
+(Today is: 25/Dec/2012)
+
+Firstly:
+{{{
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 day=18-25
+}}}
+
+And after:
+{{{
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 day=1-18
+
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=11
+
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=10
+
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=9
+
+...
+
+}}}
+
+
+= Non-in-creation-order restore (with deletions)=
+In the previous case, if you have deletions too, that will be a bit more tricky:
 
 Firstly:
 {{{
@@ -83,14 +107,35 @@ Secondly:
 {{{
 HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 day=1-18 content=BOTH
 
-HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=1-12 content=BOTH
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 day=18-25 content=DELETE_ONLY
+
 }}}
 
+Previous month: 
+{{{
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=11 content=BOTH
 
-If you have deletions too, that will be a bit more tricky:
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 content=DELETE_ONLY
+}}}
 
+Here starts the deletion pyramid:
+{{{
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=10 content=BOTH
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=11 content=DELETE_ONLY
+
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 content=DELETE_ONLY
+}}}
+
+And are growing month-by-month:
+{{{
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=9 content=BOTH
+
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=10 content=DELETE_ONLY
+
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=11 content=DELETE_ONLY
+
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 content=DELETE_ONLY
+}}}
+
+Have fun:)
