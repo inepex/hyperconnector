@@ -17,13 +17,18 @@ public class HyperDumpReaderBufferedCellStream implements AutoCloseable{
 	public static class BufferedCellStreamException extends Exception {
 		private final List<Cell> alreadydecodedCells;
 
-		public BufferedCellStreamException(List<Cell> alreadydecodedCells, Throwable cause) {
+		public BufferedCellStreamException(List<Cell> alreadydecodedCells, Exception cause) {
 			super(cause);
 			this.alreadydecodedCells=alreadydecodedCells;
 		}
 		
-		public List<Cell> getAlreadydecodedCells() {
+		public List<Cell> getAlreadyDecodedCells() {
 			return alreadydecodedCells;
+		}
+		
+		@Override
+		public synchronized Exception getCause() {
+			return (Exception) super.getCause();
 		}
 	}
 	

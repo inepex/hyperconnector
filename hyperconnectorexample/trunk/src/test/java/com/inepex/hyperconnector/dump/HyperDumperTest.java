@@ -146,7 +146,7 @@ public class HyperDumperTest {
 					
 					tickets.addAll(mapper.cellListToHyperEntityList(cells));
 				} catch (BufferedCellStreamException e) {
-					tickets.addAll(mapper.cellListToHyperEntityList(e.getAlreadydecodedCells()));
+					tickets.addAll(mapper.cellListToHyperEntityList(e.getAlreadyDecodedCells()));
 					break;
 				}
 			}
