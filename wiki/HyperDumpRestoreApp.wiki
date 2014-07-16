@@ -1,11 +1,27 @@
-#summary One-sentence summary of this page.
+#summary How to use HyperDumpRestoreApp
 
-= Introduction =
+= About this document =
+  * created on 16/07/2014
+  * updated to revision: r89
 
 Add your content here.
 
+= About HyperDumpRestoreApp = 
 
-= Details =
+= Requirements =
+  * java 7
+
+= The app supports =
+
+= The app doesn't support (right now)= 
+
+= What's about corrupt files? = 
+
+= Restore data in the order of creation =
+
+= Restore data starting with the newest =
+
+
 
 Add your content here.  Format your content with:
   * Text in *bold* or _italic_
