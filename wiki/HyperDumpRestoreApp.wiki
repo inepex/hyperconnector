@@ -20,6 +20,7 @@ This app is for restoring the dumped data by om.inepex.hyperconnector.dump.Hyper
   * corrupt file listing
 
 = The built-in help of the app = 
+{{{
 HyperDumpRestoreApp: big file optimized version July/2014
 -----------------------------
 see also it's wiki page on https://code.google.com/p/hyperconnector/wiki/HyperDumpRestoreApp
@@ -42,7 +43,7 @@ minimal params to invoke :
 
 sample invoke :
 	HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 day=12-25 content=BOTH
-
+}}}
 
 
 = The app doesn't support (right now)= 
