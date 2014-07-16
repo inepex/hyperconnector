@@ -4,14 +4,46 @@
   * created on 16/07/2014
   * updated to revision: r89
 
-Add your content here.
-
 = About HyperDumpRestoreApp = 
 
+This app is for restoring the dumped data by om.inepex.hyperconnector.dump.HyperDumper into HyperTable.
+
 = Requirements =
-  * java 7
+  * Java 7
+  * all the related java from the pom.xml of hyperconnector (hyperconnector-0.9.5.96.jar libthrift-0.8.0.jar snappy-java-1.0.5-M3.jar hypertable-0.9.5.6.jar slf4j-api-1.6.1.jar)
+  * the dump files in the same folder hierarchy, what HyperDumper has created
 
 = The app supports =
+  * unlimited dump file size (without extra memory)
+  * unlimited dump file count (without extra memory)
+  * filter parameters for restore only a month/day/hour
+  * corrupt file listing
+
+= The built-in help of the app = 
+HyperDumpRestoreApp: big file optimized version July/2014
+-----------------------------
+see also it's wiki page on https://code.google.com/p/hyperconnector/wiki/HyperDumpRestoreApp
+Mandatory params:
+	 hyperAddress - url or ip of target hypertable 
+	 hyperPort - port of hypertable 
+	 baseFolder - base folder of hyper dump hierarchy 
+	 nameSpace - name of namespace 
+	 table - name of table 
+
+Optional params (default value is every): 
+	 year - number of [1999,infinity) if you set year you must set month too 
+	 month - number of [1,12] if you set month you must set year too 
+	 day - number of [1,31] OR number range from of [1,31] inclusive to of [2,32] exclusive like: 1-15 or 1-32
+	 hour - number of [0, 23] OR number range from of [0, 23] inclusive to of [1, 24] exclusive like: 2-14 or 0-24
+	 content - one of: DELETE_ONLY, INSERT_ONLY, BOTH 
+
+minimal params to invoke :
+	HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report
+
+sample invoke :
+	HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 day=12-25 content=BOTH
+
+
 
 = The app doesn't support (right now)= 
 
