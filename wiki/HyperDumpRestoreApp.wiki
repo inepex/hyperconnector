@@ -45,11 +45,6 @@ sample invoke :
 	HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 day=12-25 content=BOTH
 }}}
 
-
-= The app doesn't support (right now)= 
-  * both the application and HyperDumper don't support hypertable modifications by non-in-creation-order restore! *Keep it in your mind!*
-  * what is not documented and not in it's code:)
-
 = What's about corrupt files? = 
   # by application crash the end of a dump file may become corrupt
   # on restart HyperDumper starts a new file, so only the in-memory data will be lost
@@ -57,9 +52,28 @@ sample invoke :
 
 
 = Restore data in the order of creation =
+*it supports hypertable modifications and deletions without a doubt
+
+Just use the minimal invoke and be patient:
+{{{
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report
+}}}
+
+
+= Problem with deletions (non-in-creation-order restore)=
+# *There is not problem with deletions by in-creation-order-restore!*
+# when your application deletes a hypertale entity, HyperDumper saves that deletion into a separate dump file
+# if you restore the original insertion after you've restored the deletion, the result will contains the entry
+# so you have to restore every deletion (from the time of restored insertion until now) after you've restored a time rage of insertions
+
+= Problem with modifications (non-in-creation-order restore) =
+# *There is not problem with modifications by in-creation-order-restore!*
+# HyperDumper doesn't support the separated dumping of modifications, so you are not able to do it like deletions
+# There is no solution for this problem in this app right now
 
 = Restore data starting with the newest =
-
+* both the application and HyperDumper don't support hypertable modifications by non-in-creation-order restore! *Keep it in your mind!*
+* but both support deletion, but it's a bit tricky
 
 
 Add your content here.  Format your content with:
