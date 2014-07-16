@@ -1,8 +1,10 @@
 package com.inepex.hyperconnector.dumpreader;
 
 import java.io.File;
+import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.thrift.transport.TTransportException;
 import org.hypertable.thriftgen.Cell;
 
 import com.inepex.hyperconnector.dao.HyperOperationException;
@@ -58,6 +60,8 @@ public class HyperDumpRestoreApp {
 		
 		System.out.println("Inserting cells...");
 		long cellInsertedSum=0;
+		List<File> corruptFiles = new LinkedList<>();
+		
 		try {
 			for(File dumpFile : HyperDumpFiles.collectMatchingFiles(baseFolder, filter)) {
 				long cellCountInfile = 0;
@@ -79,12 +83,12 @@ public class HyperDumpRestoreApp {
 						daoImpl.insert(cells);
 					}
 				} catch (BufferedCellStreamException e) {
-					if(!e.getAlreadydecodedCells().isEmpty()) {
-						cellCountInfile+=e.getAlreadydecodedCells().size();
-						daoImpl.insert(e.getAlreadydecodedCells());
+					if(!e.getAlreadyDecodedCells().isEmpty()) {
+						cellCountInfile+=e.getAlreadyDecodedCells().size();
+						daoImpl.insert(e.getAlreadyDecodedCells());
 					}
 					
-					readException=e;
+					readException=e.getCause();
 					stream.close();
 				} catch (HyperOperationException e) {
 					throw e;
@@ -101,10 +105,26 @@ public class HyperDumpRestoreApp {
 				else {
 					System.out.println(" Corrupt file:");
 					readException.printStackTrace();
+					if(!(readException instanceof TTransportException)) {
+						System.out.println("There are maybe more unprocessed files, but program stops, cause this exception is not a 'well-known-currupt-file-indicator'.\n "
+								+ "Check this situation manually!");
+						break;
+					} else {
+						corruptFiles.add(dumpFile);
+					}
 				}
 			}
 			
 			System.out.println("\nFinished ("+cellInsertedSum+" cells)------------------------------------");
+			
+			if(!corruptFiles.isEmpty()) {
+				System.out.println();
+				System.out.println("The list of corrupt files:");
+				for(File corrupt : corruptFiles) {
+					System.out.println("\t"+corrupt.getPath());
+				}
+			}
+			
 		} catch (HyperOperationException ex) {
 			ex.printStackTrace();
 		} finally {
@@ -135,8 +155,8 @@ public class HyperDumpRestoreApp {
 
 	private static void printHelp() {
 		System.out.println(
-				"HyperDumpRestoreApp\n" +
 				"-----------------------------\n" +
+				"see also it's wiki page on https://code.google.com/p/hyperconnector/wiki/HyperDumpRestoreApp" +
 				"\n" +
 				
 				"Mandatory params:\n" +
