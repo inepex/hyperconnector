@@ -10,14 +10,15 @@ This app is for restoring the dumped data by om.inepex.hyperconnector.dump.Hyper
 
 = Requirements =
   * Java 7
-  * all the related java from the pom.xml of hyperconnector (hyperconnector-0.9.5.96.jar libthrift-0.8.0.jar snappy-java-1.0.5-M3.jar hypertable-0.9.5.6.jar slf4j-api-1.6.1.jar)
+  * all the related java libs from the pom.xml of hyperconnector (hyperconnector-0.9.5.96.jar libthrift-0.8.0.jar snappy-java-1.0.5-M3.jar hypertable-0.9.5.6.jar slf4j-api-1.6.1.jar)
   * the dump files in the same folder hierarchy, what HyperDumper has created
 
 = The app supports =
   * unlimited dump file size (without extra memory)
   * unlimited dump file count (without extra memory)
-  * filter parameters for restore only a month/day/hour
+  * filter parameters for restore only a month/day/hour, deletions/insertations/both
   * corrupt file listing
+  * fail on error
 
 = The built-in help of the app = 
 {{{
@@ -46,9 +47,9 @@ sample invoke :
 }}}
 
 = What's about corrupt files? = 
-  # by application crash the end of a dump file may become corrupt
-  # on restart HyperDumper starts a new file, so only the in-memory data will be lost
-  # this app supports the corrupt end of dump files, it reads until it can, stores the cells and make a notifycation on the System.out, in most cases it's a stack trace of an IOException or TProtocolException
+  # by application crash, the end of a dump file may become corrupt
+  # on application restart, HyperDumper starts a new file, so only the in-memory data of the previos process will be lost
+  # this app supports the corrupt end of dump files, it reads until it can, stores the cells and make a notification on the System.out, in most cases it's a stack trace of an IOException or TProtocolException
 
 
 = Restore data in the order of creation =
@@ -61,19 +62,18 @@ HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hy
 
 
 = Problem with deletions (non-in-creation-order restore)=
-# *There is not problem with deletions by in-creation-order-restore!*
-# when your application deletes a hypertale entity, HyperDumper saves that deletion into a separate dump file
-# if you restore the original insertion after you've restored the deletion, the result will contains the entry
-# so you have to restore every deletion (from the time of restored insertion until now) after you've restored a time rage of insertions
+  # *There is not problem with deletions by in-creation-order-restore!*
+  # when your application deletes a hypertable entity, HyperDumper saves that deletion into a separate dump file
+  # if you restore the original insertion after you've restored the deletion, the result will contain the entry
+  # so you have to restore every deletion (from the time of restored insertions till now) after you've restored a set of insertions
 
 = Problem with modifications (non-in-creation-order restore) =
-# *There is not problem with modifications by in-creation-order-restore!*
-# HyperDumper doesn't support the separated dumping of modifications, so you are not able to do it like deletions
-# There is no solution for this problem in this app right now
+  # *There is not problem with modifications by in-creation-order-restore!*
+  # HyperDumper doesn't support the separated dumping of modifications, so you are not able to do it the way like deletions
+  # There is not solution for this problem in this app now
 
 = Non-in-creation-order restore (no deletions)=
-In case you have a *huge amount of dump files* and want to restore the *last one week*, and after the others, while users can access the data!
-(Today is: 25/Dec/2012)
+In case you have a *huge amount of dump files* and want to restore the *last one week*, and after the *others*, while *users can access* the data!(Today is: 25/Dec/2012)
 
 Firstly:
 {{{
@@ -96,7 +96,7 @@ HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hy
 
 
 = Non-in-creation-order restore (with deletions)=
-In the previous case, if you have deletions too, that will be a bit more tricky:
+In the previous case, but you have deletions too:
 
 Firstly:
 {{{
