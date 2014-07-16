@@ -71,9 +71,23 @@ HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hy
 # HyperDumper doesn't support the separated dumping of modifications, so you are not able to do it like deletions
 # There is no solution for this problem in this app right now
 
-= Restore data starting with the newest =
-* both the application and HyperDumper don't support hypertable modifications by non-in-creation-order restore! *Keep it in your mind!*
-* but both support deletion, but it's a bit tricky
+= Non-in-creation-order restore =
+In case you have a *huge amount of dump files* and want to restore the *last one week*, and after the others:
+
+Firstly:
+{{{
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 day=18-25 content=BOTH
+}}}
+
+Secondly:
+{{{
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 day=1-18 content=BOTH
+
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=1-12 content=BOTH
+}}}
+
+
+If you have deletions too, that will be a bit more tricky:
 
 
 Add your content here.  Format your content with:
