@@ -47,8 +47,14 @@ sample invoke :
 
 
 = The app doesn't support (right now)= 
+  * both the application and HyperDumper don't support hypertable modifications by non-in-creation-order restore! *Keep it in your mind!*
+  * what is not documented and not in it's code:)
 
 = What's about corrupt files? = 
+  # by application crash the end of a dump file may become corrupt
+  # on restart HyperDumper starts a new file, so only the in-memory data will be lost
+  # this app supports the corrupt end of dump files, it reads until it can, stores the cells and make a notifycation on the System.out, in most cases it's a stack trace of an IOException or TProtocolException
+
 
 = Restore data in the order of creation =
 
