@@ -49,7 +49,7 @@ sample invoke :
 = What's about corrupt files? = 
   # by application crash, the end of a dump file may become corrupt
   # on application restart, HyperDumper starts a new file, so only the in-memory data of the previos process will be lost
-  # this app supports the corrupt end of dump files, it reads until it can, stores the cells and make a notification on the System.out, in most cases it's a stack trace of an IOException or TProtocolException
+  # this app supports the corrupt end of dump files, it reads until it can, stores the cells and make a notification on the System.out, in most cases it's a stack trace of a TTransportException
 
 
 = Restore data in the order of creation =
