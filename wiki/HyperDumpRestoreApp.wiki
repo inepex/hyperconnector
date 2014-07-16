@@ -118,7 +118,7 @@ HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hy
 HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 content=DELETE_ONLY
 }}}
 
-Here starts the deletion pyramid:
+Here starts the deletion-restore pyramid:
 {{{
 HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=10 content=BOTH
 
@@ -127,7 +127,7 @@ HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hy
 HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 content=DELETE_ONLY
 }}}
 
-And are growing month-by-month:
+And it's growing month-by-month:
 {{{
 HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=9 content=BOTH
 
