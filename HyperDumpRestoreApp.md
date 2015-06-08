@@ -1,0 +1,139 @@
+# About this document #
+  * created on 16/07/2014
+  * updated to revision: [r89](https://code.google.com/p/hyperconnector/source/detail?r=89)
+
+# About HyperDumpRestoreApp #
+
+This app is for restoring the dumped data by om.inepex.hyperconnector.dump.HyperDumper into HyperTable.
+
+# Requirements #
+  * Java 7
+  * all the related java libs from the pom.xml of hyperconnector (hyperconnector-0.9.5.96.jar libthrift-0.8.0.jar snappy-java-1.0.5-M3.jar hypertable-0.9.5.6.jar slf4j-api-1.6.1.jar)
+  * the dump files in the same folder hierarchy, what HyperDumper has created
+
+# The app supports #
+  * unlimited dump file size (without extra memory)
+  * unlimited dump file count (without extra memory)
+  * filter parameters for restore only a month/day/hour, deletions/insertations/both
+  * corrupt file listing
+  * fail on error
+
+# The built-in help of the app #
+```
+HyperDumpRestoreApp: big file optimized version July/2014
+-----------------------------
+see also it's wiki page on https://code.google.com/p/hyperconnector/wiki/HyperDumpRestoreApp
+Mandatory params:
+	 hyperAddress - url or ip of target hypertable 
+	 hyperPort - port of hypertable 
+	 baseFolder - base folder of hyper dump hierarchy 
+	 nameSpace - name of namespace 
+	 table - name of table 
+
+Optional params (default value is every): 
+	 year - number of [1999,infinity) if you set year you must set month too 
+	 month - number of [1,12] if you set month you must set year too 
+	 day - number of [1,31] OR number range from of [1,31] inclusive to of [2,32] exclusive like: 1-15 or 1-32
+	 hour - number of [0, 23] OR number range from of [0, 23] inclusive to of [1, 24] exclusive like: 2-14 or 0-24
+	 content - one of: DELETE_ONLY, INSERT_ONLY, BOTH 
+
+minimal params to invoke :
+	HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report
+
+sample invoke :
+	HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 day=12-25 content=BOTH
+```
+
+# What's about corrupt files? #
+  1. by application crash, the end of a dump file may become corrupt
+  1. on application restart, HyperDumper starts a new file, so only the in-memory data of the previos process will be lost
+  1. this app supports the corrupt end of dump files, it reads until it can, stores the cells and make a notification on the System.out, in most cases it's a stack trace of a TTransportException
+
+
+# Restore data in the order of creation #
+**it supports hypertable modifications and deletions without a doubt**
+
+Just use the minimal invoke and be patient:
+```
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report
+```
+
+
+# Problem with deletions (non-in-creation-order restore) #
+  1. **There is not problem with deletions by in-creation-order-restore!**
+  1. when your application deletes a hypertable entity, HyperDumper saves that deletion into a separate dump file
+  1. if you restore the original insertion after you've restored the deletion, the result will contain the entry
+  1. so you have to restore every deletion (from the time of restored insertions till now) after you've restored a set of insertions
+
+# Problem with modifications (non-in-creation-order restore) #
+  1. **There is not problem with modifications by in-creation-order-restore!**
+  1. HyperDumper doesn't support the separated dumping of modifications, so you are not able to do it the way like deletions
+  1. There is not solution for this problem in this app now
+
+# Non-in-creation-order restore (no deletions) #
+In case you have a **huge amount of dump files** and want to restore the **last one week**, and after the **others**, while **users can access** the data!(Today is: 25/Dec/2012)
+
+Firstly:
+```
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 day=18-25
+```
+
+And after:
+```
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 day=1-18
+
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=11
+
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=10
+
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=9
+
+...
+
+```
+
+
+# Non-in-creation-order restore (with deletions) #
+In the previous case, but you have deletions too:
+
+Firstly:
+```
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 day=18-25 content=BOTH
+```
+
+Secondly:
+```
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 day=1-18 content=BOTH
+
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 day=18-25 content=DELETE_ONLY
+
+```
+
+Previous month:
+```
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=11 content=BOTH
+
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 content=DELETE_ONLY
+```
+
+Here starts the deletion-restore pyramid:
+```
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=10 content=BOTH
+
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=11 content=DELETE_ONLY
+
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 content=DELETE_ONLY
+```
+
+And it's growing month-by-month:
+```
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=9 content=BOTH
+
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=10 content=DELETE_ONLY
+
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=11 content=DELETE_ONLY
+
+HyperDumpRestoreApp hyperAddress=localhost hyperPort=38080 baseFolder=/backup/hyperDump/ nameSpace=InepexLbs table=Report year=2012 month=12 content=DELETE_ONLY
+```
+
+Have fun:)

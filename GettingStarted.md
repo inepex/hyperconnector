@@ -1,0 +1,296 @@
+## Create a project ##
+To create a sample project we suggest to use maven ( http://maven.apache.org/download.html ).
+
+You can create a sample maven project with the next command:
+```
+
+mvn archetype:generate -DgroupId=com.inepex.example -DartifactId=hyperconnectorexample -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
+```
+then create the eclipse project files with the next command:
+```
+mvn eclipse:eclipse```
+Now you can import the project into Eclipse (File > Import > Existing project into workspace)<br />
+Now you should add the following lines to your <i>pom.xml</i>:
+```
+<repositories>
+	<repository>
+		<id>inepex</id>
+		<name>inepex</name>
+		<url>http://maven.inepex.com/content/repositories/thirdparty/</url>
+	</repository>
+</repositories>
+
+<build>
+	<resources>
+		<resource>
+			<directory>src/main/java</directory>
+		</resource>
+	</resources>
+</build>
+
+<dependencies>
+<!-- ...here are you other dependencies... -->
+	<dependency>
+		<groupId>com.inepex</groupId>
+		<artifactId>hyperconnector</artifactId>
+		<version>0.9.0.6</version>
+		<scope>compile</scope>
+	</dependency>
+	<dependency>
+		<groupId>junit</groupId>
+		<artifactId>junit</artifactId>
+		<version>4.8.2</version>
+		<scope>test</scope>
+	</dependency>
+</dependencies>
+```
+... and now again run `mvn eclipse:eclipse` in command line (from the root folder of the project). After all refresh the project in eclipse.
+
+## Check out <i>hyperconnectortemplates</i> ##
+You should check out the hyperconnectortemplates project what contains all of the template files that are neccessary to code-generation. Repository location: http://hyperconnector.googlecode.com/svn/hyperconnectortemplates/ <br />
+Your project should seem like this: <br />
+![http://hyperconnector.googlecode.com/svn/wiki/projectState1.jpg](http://hyperconnector.googlecode.com/svn/wiki/projectState1.jpg)
+
+## Create an entity ##
+Like in JPA, an entity is a Java POJO annotated with the specific annotations.<br />
+The example is based on a ticketing system and we will store Tickets. A ticket is built up from:
+  * Title: the title of the ticket (ie.: Server update)
+  * Description: description of the ticket (ie.: New kernel is available, you shoud update to the new one.)
+  * Priority: the priority of the ticket (ie.: 5)
+  * Problem type: the type of the ticket (ie.: Update)
+  * Is Fixed: is the task has done (ie.: false)
+
+And the ticket representing with java object (using the HyperConnector annotations): <br />
+
+```
+@HyperEntity(namespace="UserSupport", table="Ticket", rowKeySerializationType = SerializationTypes.PLAIN, globalValueSerializationType = SerializationTypes.PLAIN, globalColumnQualifierSerializationType=SerializationTypes.PLAIN)
+public class Ticket {
+	@RowKeyField(order=0, sortOrder=SortOrders.ASCENDING)
+	private String server;
+	
+	@Timestamp(assignmentType=TimestampAssignmentTypes.MANUAL)
+	private long timestamp;
+	
+	@ValueField(columnFamily="title")
+	private String title;
+	@ValueField(columnFamily="description")
+	private String description;
+	@ValueField(columnFamily="priority")
+	private String priority;
+	@ValueField(columnFamily="problemtype")
+	private String problemType;
+	@ValueField(columnFamily="isFixed")
+	private boolean isFixed;
+	
+	
+	public String getServer() {
+		return server;
+	}
+	public void setServer(String server) {
+		this.server = server;
+	}
+	public long getTimestamp() {
+		return timestamp;
+	}
+	public void setTimestamp(long timestamp) {
+		this.timestamp = timestamp;
+	}
+	public String getTitle() {
+		return title;
+	}
+	public void setTitle(String title) {
+		this.title = title;
+	}
+	public String getDescription() {
+		return description;
+	}
+	public void setDescription(String description) {
+		this.description = description;
+	}
+	public String getPriority() {
+		return priority;
+	}
+	public void setPriority(String priority) {
+		this.priority = priority;
+	}
+	public String getProblemType() {
+		return problemType;
+	}
+	public void setProblemType(String problemType) {
+		this.problemType = problemType;
+	}
+	public boolean getIsFixed() {
+		return isFixed;
+	}
+	public void setIsFixed(boolean isFixed) {
+		this.isFixed = isFixed;
+	}
+	
+}
+```
+
+## Generate classes ##
+Assuming that you have classtemplater plugin:
+  1. Right click on Ticket.java file
+  1. Select classtemplater > Generate...
+![http://hyperconnector.googlecode.com/svn/wiki/generateCode1.jpg](http://hyperconnector.googlecode.com/svn/wiki/generateCode1.jpg) <br />
+In the pop-up window:
+  1. Select the following items from the list:
+    * hyperconnectortemplates - dao.vm
+    * hyperconnectortemplates - hql.vm
+    * hyperconnectortemplates - mapper.vm
+  1. Check <i>Format code</i> checkbox
+  1. Click <i>Save and organize (expreimental)</i> button!
+<i>IMPORTANT: classtemplater plugin not handle properly .hql output, so we suggest to generate the HQL file seperately! (First generate: Dao + mapper; Second generate: Hql)</i>
+![http://hyperconnector.googlecode.com/svn/wiki/generateCode2.jpg](http://hyperconnector.googlecode.com/svn/wiki/generateCode2.jpg) <br />
+...and the result: <br />
+![http://hyperconnector.googlecode.com/svn/wiki/generateCode3.jpg](http://hyperconnector.googlecode.com/svn/wiki/generateCode3.jpg)
+
+## Create Database ##
+As you can see after the code generation you have a <i>Ticket.hql</i> file. This file contains the HQL command that creates the data table in Hypertable.
+  1. Open the Ticket.hql
+  1. Select all of the lines
+  1. Copy and paste it to the Hypertable's shell
+  1. Press enter
+Now, your data tables are ready to use!
+
+## Configure access to database ##
+We suggest to create a configurator class (call it now HyperConfigurator). It has a static method that gives back a HyperPoolArgs object what contains the specific connection informations.<br />
+
+You have to modify:
+  * server's IP address
+  * server's port number (but 38080 is the hypertable's default)
+
+```
+public class HyperConfigurator {
+	public static HyperPoolArgs getHPA() {
+		// address and port
+		String hypertableServerAddress = "192.168.1.1";
+		int hypertableServerPort = 38080;
+
+		// other settings
+		int maxWaitMillis = 10;
+		int tryGetCount = 3;
+		int tryCreateCount = 3;
+		int insertFlags = 0;
+		int insertFlushInterval = 0;
+
+		// Client pool and Service pool
+		HyperClientPool hyperClientPool = new HyperClientPool(
+				hypertableServerAddress, hypertableServerPort);
+		HyperHqlServicePool hyperHqlServicePool = new HyperHqlServicePool(
+				hypertableServerAddress, hypertableServerPort);
+
+		// create the pool args
+		HyperPoolArgs hyperPoolArgs = new HyperPoolArgs(hyperClientPool,
+				hyperHqlServicePool, maxWaitMillis, tryGetCount,
+				tryCreateCount, insertFlags, insertFlushInterval);
+
+		return hyperPoolArgs;
+	}
+}
+```
+
+## Insert and select Ticket from Hypertable ##
+Try out what we've done! To do this create a test in the test package
+```
+public class InsertTest {
+	@Test
+	public void insertTickets() throws HyperOperationException, HyperMappingException{
+		//CREATE A NEW TICKET
+		Ticket server_update = new Ticket();
+		
+		//Set the name of the server (this will be the key in Hypertable)
+		server_update.setServer("Blade66");
+
+		//Set the timestamp of the Ticket
+		server_update.setTimestamp( System.currentTimeMillis() );
+		
+		//Set the other properties of the Ticket
+		server_update.setTitle("Kernel update");
+		server_update.setDescription("New kernel version is available, you should update to it!");
+		server_update.setProblemType("UPDATE");
+		server_update.setPriority("HIGH");
+		server_update.setIsFixed(false);
+		
+		//CONFIGURING ACCESS TO THE DATABASE
+		TicketDao dao = new TicketDao( HyperConfigurator.getHPA() );
+		
+		//insert the Ticket
+		dao.insert(server_update);
+		
+		//get all of the tickets
+		List<Ticket> ticket_result = dao.selectAll();
+		
+		for(Ticket t : ticket_result){
+			System.out.println("Server: " + t.getServer());
+			System.out.println("Title: " + t.getTitle());
+			System.out.println("Description: " + t.getDescription());
+			System.out.println("Problem type: " + t.getProblemType());
+			System.out.println("Priority: " + t.getPriority());
+			System.out.println("Is Fixed?" + t.getIsFixed());		}
+	}
+}
+```
+
+## Create complex selects ##
+If you would like to create any other select than <i>selectAll()</i> (and you may want :)), then we suggest to extend the generated DAO and implement your own selects (<i>In the future we would like to generate the specific selects based on annotations, but now it's just not implemented!</i>). Lets see an example extend based on TicketDao:
+  1. Extend the generated DAO class
+  1. Create method that creates your ScanSpec
+  1. Create public method that gets the parameters
+    1. Give these parameters to the ScanSpec creator method
+    1. Give this ScanSpec to the `selec(ScanSpec ss)` method
+    1. Give the select's result to the `mapper.cellListToHyperEntityList(...)`
+    1. return the mapper's result to the caller
+```
+public class TicketDaoExt extends TicketDao {
+
+	public TicketDaoExt(HyperPoolArgs hyperClientPoolArgs) {
+		super(hyperClientPoolArgs);
+	}
+
+	private ScanSpec getScanSpec_ByServerTimestampRange(String server, long timestamp_start, long timestamp_end) {
+		ScanSpec ss = new ScanSpec();
+		
+		List<CellInterval> cis = new ArrayList<CellInterval>();
+		CellInterval ci = new CellInterval();
+
+		//select all of the user's ticket
+		String rk_start = server;
+		String rk_end = server;
+		ci.setStart_row(rk_start);
+		ci.setEnd_row(rk_end);
+		ci.setStart_inclusive(true);
+		ci.setEnd_inclusive(true);
+		ci.setStart_column(firstColumn);
+		ci.setEnd_column(lastColumn);
+		
+		cis.add(ci);
+		
+		ss.cell_intervals = cis;
+		
+		//add the necessary columns
+		ss.columns = new ArrayList<String>();
+		ss.columns.add(column_description);
+		ss.columns.add(column_isFixed);
+		ss.columns.add(column_priority);
+		ss.columns.add(column_problemtype);
+		ss.columns.add(column_title);
+		
+		//set start and end timestamp
+		ss.setStart_time(timestamp_start);
+		ss.setEnd_time(timestamp_end);
+		
+		return ss;
+	}
+	
+	public List<Ticket> selectByServerTimestampRange(String server, long timestamp_start, long timestamp_end) throws HyperOperationException {
+		return mapper.cellListToHyperEntityList(select(getScanSpec_ByServerTimestampRange(server, timestamp_start, timestamp_end)));
+	}
+	
+	public void deleteByServerTimestampRange(String server, long timestamp_start, long timestamp_end) throws HyperOperationException {
+		delete(getScanSpec_ByServerTimestampRange(server, timestamp_start, timestamp_end));
+	}
+}
+```
+And thats all!
