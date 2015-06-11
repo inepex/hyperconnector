@@ -91,12 +91,12 @@ public class HyperDumpRestoreApp {
                         cellCountInfile += cells.size();
 
                         System.out.println("Inserting cells...");
-                        daoImpl.insert(cells);
+                        daoImpl.insertAndFlush(cells);
                     }
                 } catch (BufferedCellStreamException e) {
                     if (!e.getAlreadyDecodedCells().isEmpty()) {
                         cellCountInfile += e.getAlreadyDecodedCells().size();
-                        daoImpl.insert(e.getAlreadyDecodedCells());
+                        daoImpl.insertAndFlush(e.getAlreadyDecodedCells());
                     }
 
                     readException = e.getCause();
