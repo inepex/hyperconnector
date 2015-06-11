@@ -97,12 +97,6 @@ public class HyperDumpRestoreApp {
 
                         System.out.println("Inserting cells...");
                         daoImpl.insertAndFlush(cells);
-                        try {
-                        	System.out.println("Waiting for 3 seconds");
-                        	Thread.sleep(3000);
-                        }catch (Exception e){
-                        	
-                        }
                     }
                 } catch (BufferedCellStreamException e) {
                     if (!e.getAlreadyDecodedCells().isEmpty()) {
@@ -215,7 +209,7 @@ public class HyperDumpRestoreApp {
         HyperClientPool hyperClientPool = new HyperClientPool(hyperAddress, hyperPort);
         HyperHqlServicePool hyperHqlServicePool = new HyperHqlServicePool(hyperAddress, hyperPort);
 
-        hyperPoolArgs = new HyperPoolArgs(hyperClientPool, hyperHqlServicePool, 10, 3, 3, 0, 0);
+        hyperPoolArgs = new HyperPoolArgs(hyperClientPool, hyperHqlServicePool, 1000, 3, 3, 0, 0);
 
         daoImpl = new BottomLevelDaoImpl(hyperPoolArgs, nameSpace, table);
     }
