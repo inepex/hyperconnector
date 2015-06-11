@@ -50,6 +50,7 @@ public class HyperDumpReaderFilter {
 		if(month<10)
 			sb.append("0");
 		sb.append(month);
+		yearmonth = sb.toString();
 		return this;
 	}
 	
