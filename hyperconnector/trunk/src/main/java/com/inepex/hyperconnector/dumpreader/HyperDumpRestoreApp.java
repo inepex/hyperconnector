@@ -138,11 +138,18 @@ public class HyperDumpRestoreApp {
                     System.out.println("\t" + corrupt.getPath());
                 }
             }
+            try {
+            	System.out.println("Waiting for 10 seconds");
+            	Thread.sleep(10000);
+            }catch (Exception e){
+            	
+            }
         } catch (HyperOperationException ex) {
             ex.printStackTrace();
         } finally {
             closeHyperConnections();
         }
+        
     }
 
     private static void filterForDeviceId(List<Cell> cells) {
@@ -150,6 +157,7 @@ public class HyperDumpRestoreApp {
         while (cellIterator.hasNext()) {
             String row = cellIterator.next().getKey().getRow();
             String cellDeviceId = getDeviceId(SerializationUtil.stringToByteArray(row));
+            System.out.println("cellDevId: " + cellDeviceId);
             if (!deviceId.equals(cellDeviceId)) {
                 cellIterator.remove();
             }
