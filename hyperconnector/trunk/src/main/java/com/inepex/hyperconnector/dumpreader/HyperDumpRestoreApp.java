@@ -13,6 +13,9 @@ import com.inepex.hyperconnector.thrift.HyperPoolArgs;
 import org.apache.thrift.transport.TTransportException;
 import org.hypertable.thriftgen.Cell;
 
+import tmp.DeviceEvent;
+import tmp.DeviceEventMapper;
+
 import java.io.File;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -87,7 +90,9 @@ public class HyperDumpRestoreApp {
                             System.out.println("Restoring only for: " + deviceId);
                             filterForDeviceId(cells);
                         }
-
+                        if (table != null && table.equals("DeviceEvent")){
+                        	dumpCells(cells);
+                        }
                         cellCountInfile += cells.size();
 
                         System.out.println("Inserting cells...");
@@ -157,7 +162,6 @@ public class HyperDumpRestoreApp {
         while (cellIterator.hasNext()) {
             String row = cellIterator.next().getKey().getRow();
             String cellDeviceId = getDeviceId(SerializationUtil.stringToByteArray(row));
-            System.out.println("cellDevId: " + cellDeviceId);
             if (!deviceId.equals(cellDeviceId)) {
                 cellIterator.remove();
             }
@@ -186,6 +190,20 @@ public class HyperDumpRestoreApp {
             deviceIdBytes,
             0,
             false));
+    }
+    
+    private static void dumpCells(List<Cell> cells){
+    	try {
+    	int i = 0;
+    	for (Cell cell : cells){
+    		DeviceEvent event = new DeviceEventMapper().cellToHyperEntity(cell);
+    		System.out.println(event);
+    		i++;
+    		if (i>100) break;
+    	}
+    	} catch (Exception e){
+    		e.printStackTrace();
+    	}
     }
 
     private static void closeHyperConnections() {
