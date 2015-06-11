@@ -97,6 +97,12 @@ public class HyperDumpRestoreApp {
 
                         System.out.println("Inserting cells...");
                         daoImpl.insertAndFlush(cells);
+                        try {
+                        	System.out.println("Waiting for 3 seconds");
+                        	Thread.sleep(3000);
+                        }catch (Exception e){
+                        	
+                        }
                     }
                 } catch (BufferedCellStreamException e) {
                     if (!e.getAlreadyDecodedCells().isEmpty()) {
@@ -142,12 +148,6 @@ public class HyperDumpRestoreApp {
                 for (File corrupt : corruptFiles) {
                     System.out.println("\t" + corrupt.getPath());
                 }
-            }
-            try {
-            	System.out.println("Waiting for 10 seconds");
-            	Thread.sleep(10000);
-            }catch (Exception e){
-            	
             }
         } catch (HyperOperationException ex) {
             ex.printStackTrace();

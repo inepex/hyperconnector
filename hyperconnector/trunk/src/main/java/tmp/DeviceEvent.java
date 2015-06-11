@@ -86,7 +86,7 @@ import com.inepex.hyperconnector.annotations.ValueField;
 
 	@Override
 	public String toString() {
-		return "DeviceEvent [creationTimestamp=" + creationTimestamp + ", name=" + name + "]";
+		return "DeviceEvent [deviceId:" + deviceId + ", creationTimestamp=" + creationTimestamp + ", name=" + name + "]";
 	}
 	
 	
