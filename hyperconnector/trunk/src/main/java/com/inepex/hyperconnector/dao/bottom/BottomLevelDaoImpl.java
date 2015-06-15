@@ -74,8 +74,16 @@ public class BottomLevelDaoImpl implements BottomLevelDao {
 		return tableName;
 	}
 
+	public void insertAndFlush(List<Cell> cells) throws HyperOperationException {
+		insert(cells, true);
+	}
+	
 	@Override
 	public void insert(List<Cell> cells) throws HyperOperationException {
+		insert(cells, false);
+	}
+	
+	private void insert(List<Cell> cells, boolean flush) throws HyperOperationException {
 		if(cells==null || cells.isEmpty())
 			return;
 		
@@ -88,6 +96,9 @@ public class BottomLevelDaoImpl implements BottomLevelDao {
 			long nsid = client.open_namespace(nameSpace);
 			long mutid = client.open_mutator(nsid, tableName, insertFlags, insertFlushInterval);
 			client.mutator_set_cells(mutid, cells);
+			if (flush){
+				client.mutator_flush(mutid);
+			}
 			client.mutator_close(mutid);
 		} catch (InterruptedException e) {
 			throw new HyperOperationException(hyperOperationFailed_Interrupted, e);
