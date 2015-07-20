@@ -1,5 +1,13 @@
 package com.inepex.hyperconnector.dumpreader;
 
+import java.io.File;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.apache.thrift.transport.TTransportException;
+import org.hypertable.thriftgen.Cell;
+
 import com.inepex.hyperconnector.dao.HyperOperationException;
 import com.inepex.hyperconnector.dao.bottom.BottomLevelDaoImpl;
 import com.inepex.hyperconnector.dump.HyperDumper;
@@ -9,17 +17,6 @@ import com.inepex.hyperconnector.serialization.util.SerializationUtil;
 import com.inepex.hyperconnector.thrift.HyperClientPool;
 import com.inepex.hyperconnector.thrift.HyperHqlServicePool;
 import com.inepex.hyperconnector.thrift.HyperPoolArgs;
-
-import org.apache.thrift.transport.TTransportException;
-import org.hypertable.thriftgen.Cell;
-
-import tmp.DeviceEvent;
-import tmp.DeviceEventMapper;
-
-import java.io.File;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Application for restore the files of {@link HyperDumper}. Run the application with "help"
@@ -89,9 +86,6 @@ public class HyperDumpRestoreApp {
                         if (deviceId != null) {
                             System.out.println("Restoring only for: " + deviceId);
                             filterForDeviceId(cells);
-                        }
-                        if (table != null && table.equals("DeviceEvent")){
-                        	dumpCells(cells);
                         }
                         cellCountInfile += cells.size();
 
@@ -186,20 +180,6 @@ public class HyperDumpRestoreApp {
             false));
     }
     
-    private static void dumpCells(List<Cell> cells){
-    	try {
-    	int i = 0;
-    	for (Cell cell : cells){
-    		DeviceEvent event = new DeviceEventMapper().cellToHyperEntity(cell);
-    		System.out.println(event);
-    		i++;
-    		if (i>100) break;
-    	}
-    	} catch (Exception e){
-    		e.printStackTrace();
-    	}
-    }
-
     private static void closeHyperConnections() {
         hyperPoolArgs.getHyperHqlServicePool().destroyAllResource();
         hyperPoolArgs.getHyperClientPool().destroyAllResource();
@@ -209,7 +189,7 @@ public class HyperDumpRestoreApp {
         HyperClientPool hyperClientPool = new HyperClientPool(hyperAddress, hyperPort);
         HyperHqlServicePool hyperHqlServicePool = new HyperHqlServicePool(hyperAddress, hyperPort);
 
-        hyperPoolArgs = new HyperPoolArgs(hyperClientPool, hyperHqlServicePool, 1000, 3, 3, 0, 0);
+        hyperPoolArgs = new HyperPoolArgs(hyperClientPool, hyperHqlServicePool, 10, 3, 3, 0, 0);
 
         daoImpl = new BottomLevelDaoImpl(hyperPoolArgs, nameSpace, table);
     }
